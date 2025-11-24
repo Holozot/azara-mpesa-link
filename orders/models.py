@@ -8,6 +8,7 @@ STATUS = (
     ('Accepted', 'Accepted'),
     ('Completed', 'Completed'),
     ('Cancelled', 'Cancelled'),
+    ('PAID', 'Paid'), 
 )
 
 DELIVERY_METHOD = (
@@ -29,16 +30,22 @@ class Payment(models.Model):
 class Order(models.Model):
     user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
     payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, blank=True, null=True)
-    order_number = models.CharField(max_length=20)
+    order_number = models.CharField(max_length=50)
+    
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     phone = models.CharField(max_length=15)
     email = models.EmailField(max_length=50)
+    
     estate = models.CharField(max_length=50) 
     city = models.CharField(max_length=50)
+    order_note = models.CharField(max_length=100, blank=True) 
     
     delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD, default='Delivery') 
+    
+    # Financials (Tax removed)
     order_total = models.DecimalField(max_digits=10, decimal_places=2)
+    grand_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
     status = models.CharField(max_length=10, choices=STATUS, default='New')
     ip = models.CharField(blank=True, max_length=20)
@@ -64,7 +71,7 @@ class OrderProduct(models.Model):
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, null=True, blank=True)
     quantity = models.IntegerField()
     product_price = models.DecimalField(max_digits=10, decimal_places=2)
-    is_ordered = models.BooleanField(default=False)
+    ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

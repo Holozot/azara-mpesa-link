@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Review Order #{{ order.id }} - Azara</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -29,13 +28,13 @@
 
         <div class="p-6 sm:p-10">
             
-            <!-- Customer Info (Visual Confirmation) -->
+            <!-- Customer Info -->
             <div class="mb-6 border-b pb-4">
                 <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Shipping To</h3>
                 <p class="text-gray-900 font-medium">{{ order.full_name }}</p>
                 <p class="text-gray-600">{{ order.phone }}</p>
                 <p class="text-gray-600">{{ order.email }}</p>
-                {% if order.address_line_1 %}<p class="text-gray-600">{{ order.address_line_1 }}, {{ order.city }}</p>{% endif %}
+                {% if order.estate %}<p class="text-gray-600">{{ order.estate }}, {{ order.city }}</p>{% endif %}
             </div>
 
             <!-- Order Items Summary -->
@@ -56,16 +55,13 @@
                 {% endfor %}
             </div>
 
-            <!-- Totals -->
+            <!-- Totals (Tax Removed) -->
             <div class="bg-gray-50 p-4 rounded-lg mb-8">
                 <div class="flex justify-between text-gray-600 mb-2">
                     <span>Subtotal</span>
-                    <span>Ksh {{ order.total|floatformat:2 }}</span>
+                    <span>Ksh {{ order.order_total|floatformat:2 }}</span>
                 </div>
-                <div class="flex justify-between text-gray-600 mb-2">
-                    <span>Tax</span>
-                    <span>Ksh {{ order.tax|floatformat:2 }}</span>
-                </div>
+
                 <div class="flex justify-between text-xl font-extrabold text-gray-900 border-t border-gray-200 pt-3 mt-2">
                     <span>Total to Pay</span>
                     <span class="text-pink-600">Ksh {{ order.grand_total|floatformat:2 }}</span>
@@ -95,7 +91,6 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="text-gray-500 sm:text-sm">+254</span>
                             </div>
-                            <!-- Auto-filled with phone number from checkout -->
                             <input type="text" name="phone_number" id="phone_number" 
                                    value="{{ order.phone }}" 
                                    class="focus:ring-green-500 focus:border-green-500 block w-full pl-12 py-3 sm:text-sm border-gray-300 rounded-md border" 

@@ -6,5 +6,5 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = [
             'first_name', 'last_name', 'phone', 'email', 
-            'estate', 'city' 
+            'estate', 'city', 'order_note'
         ]
