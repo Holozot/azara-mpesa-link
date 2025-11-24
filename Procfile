@@ -1,0 +1,1 @@
+web: gunicorn Azara.wsgi --log-file -

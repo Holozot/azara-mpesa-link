@@ -1,0 +1,78 @@
+from django.db import models
+from accounts.models import Account
+from store.models import Product, ProductVariant
+from decimal import Decimal
+
+STATUS = (
+    ('New', 'New'),
+    ('Accepted', 'Accepted'),
+    ('Completed', 'Completed'),
+    ('Cancelled', 'Cancelled'),
+)
+
+DELIVERY_METHOD = (
+    ('Delivery', 'Delivery (Courier)'),
+    ('Pickup', 'Pickup (Store Location)'),
+)
+
+class Payment(models.Model):
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    payment_id = models.CharField(max_length=100)
+    payment_method = models.CharField(max_length=100)
+    amount_paid = models.CharField(max_length=10)
+    status = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.payment_id
+
+class Order(models.Model):
+    user = models.ForeignKey(Account, on_delete=models.SET_NULL, null=True)
+    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, blank=True, null=True)
+    order_number = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    phone = models.CharField(max_length=15)
+    email = models.EmailField(max_length=50)
+    estate = models.CharField(max_length=50) 
+    city = models.CharField(max_length=50)
+    
+    delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD, default='Delivery') 
+    order_total = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    status = models.CharField(max_length=10, choices=STATUS, default='New')
+    ip = models.CharField(blank=True, max_length=20)
+    is_ordered = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+
+    def full_address(self):
+        if self.delivery_method == 'Pickup':
+            return 'Customer Pickup'
+        return f'{self.estate}, {self.city}'
+
+    def __str__(self):
+        return self.first_name
+
+class OrderProduct(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, null=True, blank=True)
+    quantity = models.IntegerField()
+    product_price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_ordered = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    product_name = models.CharField(max_length=200, default='')
+    variant_details = models.CharField(max_length=200, blank=True, null=True)
+
+    def subtotal(self):
+        return Decimal(self.product_price) * self.quantity
+
+    def __str__(self):
+        return self.product.name

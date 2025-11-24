@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section-content padding-y bg">
+    <div class="container">
+        <!-- Success Message -->
+        <div class="row">
+            <main class="col-md-9 mx-auto">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="text-center">
+                            <img src="{% static 'images/check.gif' %}" alt="Success" style="max-width: 150px; margin-bottom: 20px;">
+                            <h2 class="text-success font-weight-bold">Order Placed Successfully!</h2>
+                            <p>Thank you for shopping with Azara. Your order is confirmed and pending M-Pesa verification.</p>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6 text-center text-md-left">
+                                <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
+                                <p class="mb-1"><strong>Transaction ID (M-Pesa Ref):</strong> {{ order.payment.payment_id }}</p>
+                                <p class="mb-1"><strong>Order Date:</strong> {{ order.created_at }}</p>
+                            </div>
+                            <div class="col-md-6 text-center text-md-right">
+                                <p class="mb-1"><strong>Payment Method:</strong> {{ order.payment.payment_method }}</p>
+                                <p class="mb-1"><strong>Order Status:</strong> <span class="badge badge-warning">{{ order.status }}</span></p>
+                                <p class="mb-1"><strong>Delivery Address:</strong> {{ order.estate }}, {{ order.city }}</p>
+                            </div>
+                        </div>
+
+                        <hr>
+                        
+                        <h4 class="card-title mt-4">Ordered Items:</h4>
+                        <div class="table-responsive">
+                            <table class="table table-borderless table-striped">
+                                <thead class="text-muted">
+                                    <tr class="small text-uppercase">
+                                        <th scope="col">Product</th>
+                                        <th scope="col">Quantity</th>
+                                        <th scope="col">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in ordered_products %}
+                                    <tr>
+                                        <td>
+                                            <figure class="itemside align-items-center">
+                                                <div class="info">
+                                                    <p class="title">{{ item.product_name }}</p>
+                                                    <small class="text-muted">
+                                                        {% if item.variant_details %}Size: {{ item.variant_details }}{% endif %}
+                                                    </small>
+                                                </div>
+                                            </figure>
+                                        </td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>
+                                            <var class="price">${{ item.product_price }}</var>
+                                            <small class="text-muted"> Total: ${{ item.subtotal }} </small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div> <!-- table-responsive // -->
+                        
+                        <div class="text-right mt-4">
+                            <p class="mb-1">Total (Incl. all fees): <span class="float-right">${{ subtotal }}</span></p>
+                            <h4 class="font-weight-bold">Grand Total: <span class="float-right text-success">${{ order.order_total }}</span></h4>
+                        </div>
+                        
+                        <hr>
+                        <div class="text-center">
+                            <a href="{% url 'store:store' %}" class="btn btn-primary mt-3">Continue Shopping</a>
+                        </div>
+                    </div> <!-- card-body -->
+                </div> <!-- card -->
+            </main>
+        </div> <!-- row -->
+    </div> <!-- container -->
+</section>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="section-content padding-y">
+
+<div class="card mx-auto" style="max-width:520px; margin-top:40px;">
+    <article class="card-body">
+        <header class="mb-4"><h4 class="card-title">Sign up</h4></header>
+        
+        {% include 'includes/alerts.html' %}
+
+        <form action="{% url 'register' %}" method="POST">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="col form-group">
+                    <label>First name</label>
+                    {{ form.first_name }} 
+                </div> 
+                <div class="col form-group">
+                    <label>Last name</label>
+                    {{ form.last_name }}
+                </div> 
+            </div> 
+                
+            <div class="form-group">
+                <label>Email</label>
+                {{ form.email }}
+                <small class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div> 
+            
+            <div class="form-group">
+                <label>Username</label>
+                {{ form.username }}
+            </div>
+            
+            <div class="form-group">
+                <label>Phone Number</label>
+                {{ form.phone_number }}
+            </div> 
+
+           <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label>Create password</label>
+                    {{ form.password }}
+                </div> 
+                <div class="form-group col-md-6">
+                    <label>Repeat password</label>
+                    {{ form.confirm_password }}
+                </div> 
+            </div>
+
+            <div class="form-group">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input" id="showPasswordCheck" onclick="toggleRegisterPasswords()">
+                    <label class="custom-control-label" for="showPasswordCheck">Show Password</label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block"> Register </button>
+            </div> 
+            
+        </form>
+    </article>
+</div> 
+
+<p class="text-center mt-4">Have an account? <a href="{% url 'login' %}">Log In</a></p>
+<br><br>
+</section>
+
+<script>
+    function toggleRegisterPasswords() {
+        // Django automatically gives fields IDs like 'id_fieldname'
+        var pass1 = document.getElementById("id_password");
+        var pass2 = document.getElementById("id_confirm_password");
+        
+        if (pass1.type === "password") {
+            pass1.type = "text";
+            pass2.type = "text";
+        } else {
+            pass1.type = "password";
+            pass2.type = "password";
+        }
+    }
+</script>
+{% endblock %}

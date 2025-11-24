@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-intro padding-y-sm">
+    <div class="container">
+        <div class="intro-banner-wrap">
+            <img src="{% static 'images/banners/banner.png' %}" class="img-fluid rounded" alt="Azara New Arrivals">
+        </div>
+    </div> 
+</section>
+
+<section class="section-name padding-y-sm">
+    <div class="container">
+
+        <div class="row mb-5">
+            <div class="col-12">
+                 <header class="section-heading mb-4 d-flex justify-content-between align-items-center">
+    				<h3 class="title-text" style="color: #333;">Explore Haircare</h3>
+   					 <a href="{% url 'store:products_by_category' 'haircare' %}" class="btn btn-primary rounded-pill px-4">
+    					    View More <i class="fa fa-arrow-right ml-2"></i>
+   					 </a>
+				</header>
+                
+                <div class="row">
+                    {% for product in haircare_products %}
+                    <div class="col-md-3 col-6"> 
+                        <div class="card card-product-grid border-0 shadow-sm">
+                            <a href="{% url 'store:product_detail' category_slug=product.category.slug product_slug=product.slug %}" class="img-wrap"> 
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}"> 
+                            </a>
+                            <figcaption class="info-wrap text-center">
+                                <a href="{% url 'store:product_detail' category_slug=product.category.slug product_slug=product.slug %}" class="title text-dark font-weight-bold text-truncate">{{ product.name }}</a>
+                                <div class="price mt-1">
+                                    {% if product.get_display_price %}
+                                        KES {{ product.get_display_price|floatformat:2 }}
+                                    {% else %}
+                                        <span class="text-muted">See Options</span>
+                                    {% endif %}
+                                </div> 
+                            </figcaption>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12"><p class="text-muted">No Haircare products found. Add products to categories named 'Haircare', 'Shampoo', etc.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <header class="section-heading mb-4 d-flex justify-content-between align-items-center">
+    				<h3 class="title-text" style="color: #333;">Explore Skincare</h3>
+   					 <a href="{% url 'store:products_by_category' 'skincare' %}" class="btn btn-primary rounded-pill px-4">
+      					  View More <i class="fa fa-arrow-right ml-2"></i>
+   					 </a>
+				</header>
+				
+                <div class="row">
+                    {% for product in skincare_products %}
+                    <div class="col-md-3 col-6"> 
+                        <div class="card card-product-grid border-0 shadow-sm">
+                            <a href="{% url 'store:product_detail' category_slug=product.category.slug product_slug=product.slug %}" class="img-wrap"> 
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}"> 
+                            </a>
+                            <figcaption class="info-wrap text-center">
+                                <a href="{% url 'store:product_detail' category_slug=product.category.slug product_slug=product.slug %}" class="title text-dark font-weight-bold text-truncate">{{ product.name }}</a>
+                                <div class="price mt-1">
+                                    {% if product.get_display_price %}
+                                        KES {{ product.get_display_price|floatformat:2 }}
+                                    {% else %}
+                                        <span class="text-muted">See Options</span>
+                                    {% endif %}
+                                </div> 
+                            </figcaption>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12"><p class="text-muted">No Skincare products found. Add products to categories named 'Skincare', 'Face', etc.</p></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4 pb-4">
+             <div class="col-12 text-center">
+                <a href="{% url 'store:store' %}" class="btn btn-primary rounded-pill px-5 py-3" style="font-weight: 600;">
+                    View All Products <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</section>
+{% endblock %}

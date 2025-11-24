@@ -1,0 +1,58 @@
+{% load static %}
+
+    <footer class="section-footer" style="background-color: #D72E6F; color: white; padding-top: 40px;">
+    <div class="container">
+        <section class="footer-main padding-y">
+            <div class="row align-items-start"> <aside class="col-lg-4 col-md-4 col-sm-12 mb-4 mb-md-0">
+                    <div class="footer-logo d-flex justify-content-start">
+                        <a href="{% url 'store:store' %}">
+                            <img src="{% static 'images/azaralogo_footer.png' %}" alt="Azara Logo" class="logo-footer" style="height: 140px; width: auto; max-width: 100%;">
+                        </a>
+                    </div>
+                </aside>
+                
+               <aside class="col-lg-4 col-md-4 col-sm-12 text-center">
+                    <h6 class="title text-white font-weight-bold mb-3">Quick Links</h6>
+                    <ul class="list-menu" style="padding-left: 0;"> <li> <a href="#" class="text-white">Privacy Policy</a></li>
+                        <li> <a href="#" class="text-white">About Us</a></li>
+                        <li> <a href="#" class="text-white">Customer Service</a></li>
+                        <li> <a href="#" class="text-white">Terms & Conditions</a></li>
+                    </ul>
+                </aside>
+
+                <aside class="col-lg-4 col-md-4 col-sm-12 text-lg-right text-center">
+                    <h6 class="title text-white font-weight-bold mb-3">Contact & Social</h6>
+                    
+                    <ul class="list-icon d-inline-block text-lg-right text-left">
+                        <li class="mb-2">
+                            <span class="text text-white">+254 700 123 456</span>
+                            <i class="icon fa fa-phone text-white ml-2"></i> 
+                        </li>
+                        <li class="mb-2">
+                            <span class="text text-white">@azara_beauty</span>
+                            <i class="icon fab fa-instagram text-white ml-2"></i> 
+                        </li>
+                        <li class="mb-2">
+                            <span class="text text-white">azara_beauty</span>
+                            <i class="icon fab fa-facebook text-white ml-2"></i> 
+                        </li>
+                        <li class="mb-2">
+                            <span class="text text-white">azarabeauty@gmail.com</span>
+                            <i class="icon fa fa-envelope text-white ml-2"></i> 
+                        </li>
+                    </ul>
+                </aside>
+            </div> 
+        </section>
+
+        <section class="footer-bottom row border-top" style="border-color: rgba(255,255,255,0.2) !important; padding-top: 20px; padding-bottom: 20px;">
+            <div class="col-md-6 text-center text-md-left">
+                <p class="text-white" style="opacity: 0.8;"> &copy; 2024 Azara Beauty. All rights reserved. </p>
+            </div>
+            
+            <div class="col-md-6 text-center text-md-right">
+                <span class="text-white" style="opacity: 0.8;">Serving Kenya with quality beauty products.</span>
+            </div>
+        </section>
+    </div>
+</footer>
