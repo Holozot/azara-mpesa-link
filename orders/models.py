@@ -37,8 +37,8 @@ class Order(models.Model):
     phone = models.CharField(max_length=15)
     email = models.EmailField(max_length=50)
     
-    estate = models.CharField(max_length=50) 
-    city = models.CharField(max_length=50)
+    estate = models.CharField(max_length=50, blank=True)
+    city = models.CharField(max_length=50, blank=True)
     order_note = models.CharField(max_length=100, blank=True) 
     
     delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD, default='Delivery') 
