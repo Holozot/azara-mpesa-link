@@ -16,13 +16,14 @@ def place_order(request, total=0, quantity=0):
     if cart_count <= 0:
         return redirect('store:store')
 
-    # 2. Calculate Totals (Tax removed)
+    # 2. Calculate Totals (Tax Inclusive Logic)
     grand_total = 0
     for cart_item in cart_items:
-        total += (cart_item.product.price * cart_item.quantity)
+        # Use get_display_price property
+        price = cart_item.product.get_display_price
+        total += (price * cart_item.quantity)
         quantity += cart_item.quantity
     
-    # Grand total is simply the total of products
     grand_total = total 
 
     # 3. Process Form
@@ -47,7 +48,6 @@ def place_order(request, total=0, quantity=0):
                 data.estate = 'Pickup Location'
                 data.city = 'Nairobi'
 
-            # Save Financials (Tax removed)
             data.order_total = grand_total
             data.grand_total = grand_total
             data.ip = request.META.get('REMOTE_ADDR')
@@ -64,7 +64,7 @@ def place_order(request, total=0, quantity=0):
             
             data.save()
 
-            # --- Create Pending Payment Record ---
+            # --- Create Payment Record ---
             payment = Payment(
                 user = current_user,
                 payment_id = f"MPESA-{order_number}", 
@@ -86,10 +86,10 @@ def place_order(request, total=0, quantity=0):
                 order_product.user = current_user
                 order_product.product = item.product
                 order_product.quantity = item.quantity
-                order_product.product_price = item.product.price
+                order_product.product_price = item.product.get_display_price
                 order_product.ordered = False
                 
-                # Handle Variants if they exist
+                # Handle Variants
                 variant = item.variations.first()
                 if variant:
                     order_product.product_price = variant.price
@@ -102,14 +102,15 @@ def place_order(request, total=0, quantity=0):
                     variant.stock -= item.quantity
                     variant.save()
                 else:
-                    item.product.stock -= item.quantity
-                    item.product.save()
+                    if hasattr(item.product, 'stock'):
+                        item.product.stock -= item.quantity
+                        item.product.save()
 
             # Clear Cart
             CartItem.objects.filter(user=request.user).delete()
 
-            # --- REDIRECT TO M-PESA PAGE ---
-            return redirect('order_review', order_id=data.id)
+            # --- FIX: USE NAMESPACE 'store:' ---
+            return redirect('store:order_review', order_id=data.id)
         else:
             print("Form errors:", form.errors) 
             return redirect('checkout') 
@@ -129,5 +130,6 @@ def order_complete(request):
             'subtotal': order.order_total, 
         }
         return render(request, 'orders/order_complete.html', context)
+    
     except (Payment.DoesNotExist, Order.DoesNotExist):
         return redirect('store:store')

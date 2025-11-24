@@ -55,13 +55,13 @@
                 {% endfor %}
             </div>
 
-            <!-- Totals (Tax Removed) -->
+            <!-- Totals -->
             <div class="bg-gray-50 p-4 rounded-lg mb-8">
                 <div class="flex justify-between text-gray-600 mb-2">
                     <span>Subtotal</span>
                     <span>Ksh {{ order.order_total|floatformat:2 }}</span>
                 </div>
-
+                
                 <div class="flex justify-between text-xl font-extrabold text-gray-900 border-t border-gray-200 pt-3 mt-2">
                     <span>Total to Pay</span>
                     <span class="text-pink-600">Ksh {{ order.grand_total|floatformat:2 }}</span>
@@ -82,7 +82,8 @@
                     Confirm your M-PESA number below. We will send a prompt to your phone.
                 </p>
 
-                <form action="{% url 'stk_push_request' order.id %}" method="POST" class="space-y-4">
+                <!-- FIX: Added 'store:' namespace to the URL tag -->
+                <form action="{% url 'store:stk_push_request' order.id %}" method="POST" class="space-y-4">
                     {% csrf_token %}
                     
                     <div>
