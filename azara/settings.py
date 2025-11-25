@@ -124,8 +124,9 @@ WHITENOISE_ALLOW_MISSING_FILES = True
 # 2. Use the ManifestStorage which correctly honors the missing file flag
 STATICFILES_STORAGE = 'whitenoise.storage.ManifestStaticFilesStorage'
 
-# 3. CRITICAL FINAL FIX: Exclude the problematic Font Awesome CSS files 
-# from URL hashing, as they reference non-existent local font files.
+WHITENOISE_MANIFEST_STRICT = False
+
+
 WHITENOISE_EXCLUDE_FILES = [
     'regular.min.css', 
     'solid.min.css',
