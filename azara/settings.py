@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@+qme4ygn2u0%7aa-8n)4
 DEBUG = 'RENDER' not in os.environ
 
 # Add Render URL and Localhosts
-ALLOWED_HOSTS = ['azara-ecommerce-system.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['azara-mpesa-link.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
