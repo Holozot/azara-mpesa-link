@@ -127,7 +127,7 @@ STATICFILES_DIRS = [
 WHITENOISE_ALLOW_MISSING_FILES = True
 
 # Enable WhiteNoise storage for persistent caching
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.ManifestStaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -138,6 +138,8 @@ MEDIA_URL = '/media/'
 
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.Account'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- M-PESA CONFIGURATION ---
 # These read from the Environment Variables you set in Render
