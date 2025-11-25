@@ -25,7 +25,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@+qme4ygn2u0%7aa-8n)4
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # If 'RENDER' is set in environment variables, DEBUG will be False. Otherwise True.
-DEBUG = True
+DEBUG = 'RENDER' not in os.environ
 
 # Allow ALL hosts to prevent DisallowedHost errors
 ALLOWED_HOSTS = ['*']
@@ -123,6 +123,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+WHITENOISE_ALLOW_MISSING_FILES = True
 
 # Enable WhiteNoise storage for persistent caching
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
