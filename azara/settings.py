@@ -27,9 +27,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-@+qme4ygn2u0%7aa-8n)4
 # If 'RENDER' is set in environment variables, DEBUG will be False. Otherwise True.
 DEBUG = 'RENDER' not in os.environ
 
-# Add Render URL and Localhosts
-ALLOWED_HOSTS = ['azara-mpesa-link.onrender.com', 'localhost', '127.0.0.1']
-
+# Allow ALL hosts to prevent DisallowedHost errors
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
