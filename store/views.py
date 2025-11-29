@@ -101,17 +101,21 @@ def store(request, category_slug=None):
     else:
         products = Product.objects.filter(available=True).order_by('-created')
 
-    # --- 2. Apply Filters (Brand & Price) ---
-    products, selected_brand_ids = apply_product_filters(request, products)
-    all_brands = Brand.objects.all()
+    # --- 2. DYNAMIC BRANDS ---
+    relevant_brand_ids = products.values_list('brand_id', flat=True).distinct()
+    all_brands = Brand.objects.filter(id__in=relevant_brand_ids).order_by('name')
 
-    # --- 3. Pagination Helper ---
+    # --- 3. Apply Filters (Brand Selection & Price) ---
+    # Now we filter the products based on user selection
+    products, selected_brand_ids = apply_product_filters(request, products)
+
+    # --- 4. Pagination Helper ---
     query_params = request.GET.copy()
     if 'page' in query_params:
         del query_params['page']
     current_filters = query_params.urlencode()
 
-    # --- 4. Pagination ---
+    # --- 5. Pagination ---
     paginator = Paginator(products, 6) 
     page = request.GET.get('page')
     paged_products = paginator.get_page(page)
@@ -122,7 +126,7 @@ def store(request, category_slug=None):
         'categories': categories, 
         'product_count': product_count, 
         'current_category': current_category,
-        'all_brands': all_brands,
+        'all_brands': all_brands, # This is now the filtered list
         'selected_brand_ids': list(map(int, selected_brand_ids)), 
         'current_filters': current_filters,
     }
@@ -158,7 +162,6 @@ def search(request):
             current_category = f"Search results for: '{keyword}'"
     
     # --- 2. Apply Filters (Brand & Price) ---
-    # This was missing in your previous code!
     products, selected_brand_ids = apply_product_filters(request, products)
     all_brands = Brand.objects.all()
 
