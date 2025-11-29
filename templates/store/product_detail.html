@@ -63,6 +63,7 @@
                 <div class="col-6">
                     <h6 class="mb-2">Quantity</h6>
                     
+                    <input type="hidden" id="current_max_stock" value="{{ single_product.stock|default:0 }}">
                    <div class="input-group input-spinner">
                         <div class="input-group-prepend">
                             <button class="btn btn-light" type="button" id="button-minus"> 
@@ -115,44 +116,83 @@
 </section>
 
 <script>
+    // 1. CREATE A STOCK MAP
+    // This allows JS to know the stock of every variant
+    var variantStockMap = {
+        {% for variant in single_product.variants.all %}
+            "{{ variant.id }}": {{ variant.stock|default:0 }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+    
+    // 2. MAIN STOCK FALLBACK (Crucial Fix: Added |default:0)
+    var mainProductStock = {{ single_product.stock|default:0 }};
+
     function selectSize(labelElement, price) {
-        // 1. UPDATE PRICE TEXT
+        // A. Update Price
         document.getElementById('product_price').innerText = price;
 
-        // 2. CHECK THE HIDDEN RADIO BUTTON
+        // B. Check the Radio Button & Get ID
         var input = labelElement.querySelector('input');
         input.checked = true;
+        var variantId = input.value;
 
-        // 3. UPDATE VISUALS (PINK BUTTONS)
-        var allLabels = document.querySelectorAll('.btn-size-selector');
+        // C. Update the Max Stock Limit based on the ID
+        var stockLimit = variantStockMap[variantId];
         
-        // Remove pink class from ALL
+        // Safety check: if undefined (e.g. no variants), use main product stock
+        if (stockLimit === undefined) {
+            stockLimit = mainProductStock;
+        }
+
+        document.getElementById('current_max_stock').value = stockLimit;
+
+        // D. Update Visuals (Pink Buttons)
+        var allLabels = document.querySelectorAll('.btn-size-selector');
         allLabels.forEach(function(lbl) {
             lbl.classList.remove('active-pink');
         });
-
-        // Add pink class ONLY to the clicked label
         labelElement.classList.add('active-pink');
+
+        // E. Reset Quantity to 1 (Important when switching sizes)
+        document.getElementById('quantity_input').value = "1"; 
     }
 
     document.addEventListener("DOMContentLoaded", function() {
         const btnMinus = document.getElementById('button-minus');
         const btnPlus = document.getElementById('button-plus');
         const qtyInput = document.getElementById('quantity_input');
+        const limitField = document.getElementById('current_max_stock');
 
-        // Increase Quantity
+        // Hoarding Limit Constant
+        const HOARDING_LIMIT = 5;
+
+        // Increase Quantity Logic
         btnPlus.addEventListener('click', function() {
-            let val = parseInt(qtyInput.value);
-            if (val < 10) { // Optional: Max limit per order
-                qtyInput.value = val + 1;
+            let currentVal = parseInt(qtyInput.value);
+            
+            // Added fallback '|| mainProductStock' to prevent NaN errors
+            let actualStock = parseInt(limitField.value) || mainProductStock;
+
+            // The Real Limit is the smaller of: 5 OR Actual Stock
+            let realLimit = Math.min(HOARDING_LIMIT, actualStock);
+
+            if (currentVal < realLimit) {
+                qtyInput.value = currentVal + 1;
+            } else {
+                // Alert the user why they stopped
+                if (actualStock < HOARDING_LIMIT) {
+                    alert("Only " + actualStock + " items left in stock.");
+                } else {
+                    alert("To avoid hoarding, max order is " + HOARDING_LIMIT + " per item.");
+                }
             }
         });
 
-        // Decrease Quantity
+        // Decrease Quantity Logic
         btnMinus.addEventListener('click', function() {
-            let val = parseInt(qtyInput.value);
-            if (val > 1) { // Minimum limit is 1
-                qtyInput.value = val - 1;
+            let currentVal = parseInt(qtyInput.value);
+            if (currentVal > 1) {
+                qtyInput.value = currentVal - 1;
             }
         });
     });

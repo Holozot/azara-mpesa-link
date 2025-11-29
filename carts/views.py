@@ -34,22 +34,34 @@ def add_cart(request, product_id):
     # 1. INITIALIZE VARIABLES
     product_variation = []  
     product_quantity = 1 
+    selected_variant = None 
 
     if request.method == 'POST':
-        # Capture Quantity
         if 'quantity' in request.POST:
             product_quantity = int(request.POST['quantity'])
         
-        # Capture Variant ID
         variant_id = request.POST.get('variant_id')
         if variant_id:
             try:
-                variation = ProductVariant.objects.get(product=product, id=variant_id)
-                product_variation.append(variation)
+                selected_variant = ProductVariant.objects.get(product=product, id=variant_id)
+                product_variation.append(selected_variant)
             except:
                 pass
 
-    # 2. DETERMINE WHICH CART TO USE (User vs Session)
+    # LOGIC: DETERMINE WHICH STOCK TO CHECK
+    if selected_variant:
+        current_stock = selected_variant.stock
+        stock_type = f"{selected_variant.size_ml_g}"
+    else:
+        current_stock = product.stock
+        stock_type = "item"
+
+    # RULE 1: HARD CHECK FOR EMPTY STOCK
+    if current_stock <= 0:
+        messages.warning(request, f'This {stock_type} is currently out of stock.')
+        return redirect('store:store')
+
+    # 2. DETERMINE CART
     if current_user.is_authenticated:
         cart_items_queryset = CartItem.objects.filter(product=product, user=current_user)
     else:
@@ -60,34 +72,57 @@ def add_cart(request, product_id):
         cart.save()
         cart_items_queryset = CartItem.objects.filter(product=product, cart=cart)
 
-    # 3. CHECK IF ITEM EXISTS (Logic with Sorting)
+    # 3. CHECK IF ITEM EXISTS
     is_cart_item_exists = cart_items_queryset.exists()
     
+    HOARDING_LIMIT = 5
+    real_limit = min(HOARDING_LIMIT, current_stock)
+
     if is_cart_item_exists:
         ex_var_list = []
         id_list = []
         
-        # Loop through existing items to build a list of their variants
         for item in cart_items_queryset:
-            existing_variation = item.variations.all()
-            # CRITICAL FIX: Sort the list so comparison [A, B] == [B, A] works
-            ex_var_list.append(list(existing_variation)) 
+            existing_variation = list(item.variations.all())
+            existing_variation.sort(key=lambda x: x.id) 
+            ex_var_list.append(existing_variation)
             id_list.append(item.id)
 
-        # CRITICAL FIX: Sort the incoming variation too
-        
+        product_variation.sort(key=lambda x: x.id)
+
         if product_variation in ex_var_list:
-            # --- SCENARIO 1: VARIANT EXISTS (Increment Quantity) ---
+            # --- SCENARIO: ITEM EXISTS (INCREMENT) ---
             index = ex_var_list.index(product_variation)
             item_id = id_list[index]
             item = CartItem.objects.get(product=product, id=item_id)
+            
+            future_quantity = item.quantity + product_quantity
+            
+            if future_quantity > real_limit:
+                # --- UPDATED MESSAGE LOGIC HERE ---
+                if current_stock < HOARDING_LIMIT:
+                    msg = f"Quantity exceeded available stock. Please select {current_stock} items or less."
+                else:
+                    msg = f"To avoid hoarding, you can only order {HOARDING_LIMIT} items of the same variant."
+                
+                messages.warning(request, msg)
+                return redirect('cart:cart')
             
             item.quantity += product_quantity
             item.save()
             
         else:
-            # --- SCENARIO 2: NEW VARIANT (Create New Item) ---
-            # We create the item using the quantity captured (e.g., 1 or 2)
+            # --- SCENARIO: NEW VARIANT (CREATE) ---
+            if product_quantity > real_limit:
+                # --- UPDATED MESSAGE LOGIC HERE ---
+                if current_stock < HOARDING_LIMIT:
+                    msg = f"Quantity exceeded available stock. Please select {current_stock} items or less."
+                else:
+                    msg = f"To avoid hoarding, you can only order {HOARDING_LIMIT} items of the same variant."
+                
+                messages.warning(request, msg)
+                return redirect('cart:cart')
+
             if current_user.is_authenticated:
                 item = CartItem.objects.create(product=product, quantity=product_quantity, user=current_user)
             else:
@@ -99,7 +134,17 @@ def add_cart(request, product_id):
             item.save()
             
     else:
-        # --- SCENARIO 3: NEW PRODUCT (Create New Item) ---
+        # --- SCENARIO: NEW PRODUCT (CREATE) ---
+        if product_quantity > real_limit:
+            # --- UPDATED MESSAGE LOGIC HERE ---
+            if current_stock < HOARDING_LIMIT:
+                msg = f"Quantity exceeded available stock. Please select {current_stock} items or less."
+            else:
+                msg = f"To avoid hoarding, you can only order {HOARDING_LIMIT} items of the same variant."
+            
+            messages.warning(request, msg)
+            return redirect('cart:cart')
+
         if current_user.is_authenticated:
             cart_item = CartItem.objects.create(
                 product = product,
@@ -119,6 +164,7 @@ def add_cart(request, product_id):
         cart_item.save()
     
     return redirect('cart:cart')
+
 
 def remove_cart(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
