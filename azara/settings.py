@@ -132,3 +132,18 @@ MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
 MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET')
 MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
 MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE')
+
+# --- SESSION SETTINGS ---
+
+# 1. Set the lifespan of the session cookie (in seconds)
+# 45 minutes * 60 seconds = 2700 seconds
+SESSION_COOKIE_AGE = 45 * 60 
+
+# 2. Reset the clock on every request
+# If True: The 45-minute timer restarts every time the user loads a page.
+# If False: The user gets kicked out 45 minutes after login, even if they are active.
+SESSION_SAVE_EVERY_REQUEST = True
+
+# 3. Close session when browser closes
+# True: Closing Chrome/Firefox logs them out immediately, regardless of the time left.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
