@@ -1587,3 +1587,34 @@ body {
 footer {
     flex-shrink: 0; /* Prevent footer from squishing */
 }
+
+/* --- Added for Category Highlighting Fix --- */
+
+/* Base style for the child category link */
+.category-link {
+  color: #666;             /* Default Grey */
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  display: block;          /* Makes the whole area clickable */
+  text-decoration: none;
+}
+
+/* Hover State */
+.category-link:hover {
+  color: var(--azara-primary); /* Pink on hover */
+  padding-left: 5px;       /* Subtle shift effect you already had */
+  text-decoration: none;
+}
+
+/* Active State (The Pink Highlight) */
+.category-link.active {
+  color: var(--azara-primary);
+  font-weight: bold;       /* Make it pop */
+}
+
+.filter-dropdown-menu {
+    max-height: 250px; /* Limit height */
+    overflow-y: auto;  /* Add scrollbar */
+    padding: 15px;
+    min-width: 250px;  /* Make it wide enough for names */
+}
