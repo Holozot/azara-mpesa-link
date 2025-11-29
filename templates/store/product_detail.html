@@ -33,7 +33,7 @@
 
             <hr>
             
-            <form action="{% url 'add_cart' single_product.id %}" method="POST">
+            <form action="{% url 'cart:add_cart' single_product.id %}" method="POST">
                 {% csrf_token %}
                 
                 {% if variants %}
@@ -60,19 +60,24 @@
                 </div> 
                 {% endif %}
                 
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <h6 class="mb-2">Quantity</h6>
-                        <select name="quantity" class="form-control" style="width: 80px;">
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                        </select>
+                <div class="col-6">
+                    <h6 class="mb-2">Quantity</h6>
+                    
+                   <div class="input-group input-spinner">
+                        <div class="input-group-prepend">
+                            <button class="btn btn-light" type="button" id="button-minus"> 
+                                <i class="fa fa-minus"></i> 
+                            </button>
+                        </div>
+                        
+                        <input type="text" class="form-control" id="quantity_input" name="quantity" value="1" readonly>
+                        
+                        <div class="input-group-append">
+                            <button class="btn btn-light" type="button" id="button-plus"> 
+                                <i class="fa fa-plus"></i> 
+                            </button>
+                        </div>
                     </div>
-                </div>
 
                 <hr>
                 
@@ -129,6 +134,28 @@
         // Add pink class ONLY to the clicked label
         labelElement.classList.add('active-pink');
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnMinus = document.getElementById('button-minus');
+        const btnPlus = document.getElementById('button-plus');
+        const qtyInput = document.getElementById('quantity_input');
+
+        // Increase Quantity
+        btnPlus.addEventListener('click', function() {
+            let val = parseInt(qtyInput.value);
+            if (val < 10) { // Optional: Max limit per order
+                qtyInput.value = val + 1;
+            }
+        });
+
+        // Decrease Quantity
+        btnMinus.addEventListener('click', function() {
+            let val = parseInt(qtyInput.value);
+            if (val > 1) { // Minimum limit is 1
+                qtyInput.value = val - 1;
+            }
+        });
+    });
 </script>
 
 {% endblock %}

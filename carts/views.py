@@ -4,25 +4,21 @@ from .models import Cart, CartItem
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from decimal import Decimal # Required for accurate monetary calculations
+from decimal import Decimal 
 
-# Helper function to get cart totals (
+# --- HELPER FUNCTIONS ---
+
 def get_cart_totals(cart_items):
     sub_total = Decimal('0.00')
-    
     for cart_item in cart_items:
-        # Use Decimal for accurate calculations
         sub_total += cart_item.sub_total()
     
-    # Grand total currently equals subtotal (excluding offline delivery charges)
     grand_total = sub_total
     
-    # Return as strings for template display convenience
     return {
         'sub_total': f'{sub_total:.2f}',
         'grand_total': f'{grand_total:.2f}',
     }
-
 
 def _cart_id(request):
     cart = request.session.session_key
@@ -30,95 +26,99 @@ def _cart_id(request):
         cart = request.session.create()
     return cart
 
+# --- VIEWS ---
 def add_cart(request, product_id):
     current_user = request.user
-    product = get_object_or_404(Product, id=product_id) 
+    product = Product.objects.get(id=product_id) 
     
-    # 1. Get Selected Variant
-    product_variant = None
+    # 1. INITIALIZE VARIABLES
+    product_variation = []  
+    product_quantity = 1 
+
     if request.method == 'POST':
-        try:
-            variant_id = request.POST['variant_id']
-            # NOTE: Assuming ProductVariant has a single variant type (e.g., size) 
-            # and that 'variations' on CartItem is a ManyToManyField linked to ProductVariant.
-            product_variant = ProductVariant.objects.get(id=variant_id) 
-        except Exception:
-            messages.error(request, 'Please select a size.')
-            return redirect(product.get_url())
-
-    # --- LOGIC FOR LOGGED IN USERS ---
-    if current_user.is_authenticated:
-        # Check if this item is already in the user's cart
-        is_cart_item_exists = CartItem.objects.filter(product=product, user=current_user).exists()
+        # Capture Quantity
+        if 'quantity' in request.POST:
+            product_quantity = int(request.POST['quantity'])
         
-        if is_cart_item_exists:
-            cart_items = CartItem.objects.filter(product=product, user=current_user)
-            # Check existing items to see if variant matches
-            existing_variant_list = []
-            id_list = []
-            for item in cart_items:
-                # The logic below relies on variations.all() returning a specific order/count, 
-                # which can be brittle. We are retaining your original logic structure 
-                # but flagging it for potential future cleanup if needed.
-                existing_variant = item.variations.all()
-                existing_variant_list.append(list(existing_variant))
-                id_list.append(item.id)
+        # Capture Variant ID
+        variant_id = request.POST.get('variant_id')
+        if variant_id:
+            try:
+                variation = ProductVariant.objects.get(product=product, id=variant_id)
+                product_variation.append(variation)
+            except:
+                pass
 
-            if [product_variant] in existing_variant_list:
-                # Increase quantity
-                index = existing_variant_list.index([product_variant])
-                item_id = id_list[index]
-                item = CartItem.objects.get(product=product, id=item_id)
-                item.quantity += 1
-                item.save()
-            else:
-                # New variant for existing product
-                item = CartItem.objects.create(product=product, quantity=1, user=current_user)
-                item.variations.add(product_variant)
-                item.save()
-        else:
-            # New Item entirely
-            item = CartItem.objects.create(product=product, quantity=1, user=current_user)
-            item.variations.add(product_variant)
-            item.save()
-            
-        return redirect('cart')
-
-    # --- LOGIC FOR GUEST USERS (Not Logged In) ---
+    # 2. DETERMINE WHICH CART TO USE (User vs Session)
+    if current_user.is_authenticated:
+        cart_items_queryset = CartItem.objects.filter(product=product, user=current_user)
     else:
         try:
             cart = Cart.objects.get(cart_id=_cart_id(request))
         except Cart.DoesNotExist:
-            cart = Cart.objects.create(cart_id = _cart_id(request))
-            cart.save()
+            cart = Cart.objects.create(cart_id=_cart_id(request))
+        cart.save()
+        cart_items_queryset = CartItem.objects.filter(product=product, cart=cart)
 
-        is_cart_item_exists = CartItem.objects.filter(product=product, cart=cart).exists()
+    # 3. CHECK IF ITEM EXISTS (Logic with Sorting)
+    is_cart_item_exists = cart_items_queryset.exists()
+    
+    if is_cart_item_exists:
+        ex_var_list = []
+        id_list = []
         
-        if is_cart_item_exists:
-            cart_items = CartItem.objects.filter(product=product, cart=cart)
-            existing_variant_list = []
-            id_list = []
-            for item in cart_items:
-                existing_variant = item.variations.all()
-                existing_variant_list.append(list(existing_variant))
-                id_list.append(item.id)
+        # Loop through existing items to build a list of their variants
+        for item in cart_items_queryset:
+            existing_variation = item.variations.all()
+            # CRITICAL FIX: Sort the list so comparison [A, B] == [B, A] works
+            ex_var_list.append(list(existing_variation)) 
+            id_list.append(item.id)
 
-            if [product_variant] in existing_variant_list:
-                index = existing_variant_list.index([product_variant])
-                item_id = id_list[index]
-                item = CartItem.objects.get(product=product, id=item_id)
-                item.quantity += 1
-                item.save()
-            else:
-                item = CartItem.objects.create(product=product, quantity=1, cart=cart)
-                item.variations.add(product_variant)
-                item.save()
-        else:
-            item = CartItem.objects.create(product=product, quantity=1, cart=cart)
-            item.variations.add(product_variant)
+        # CRITICAL FIX: Sort the incoming variation too
+        
+        if product_variation in ex_var_list:
+            # --- SCENARIO 1: VARIANT EXISTS (Increment Quantity) ---
+            index = ex_var_list.index(product_variation)
+            item_id = id_list[index]
+            item = CartItem.objects.get(product=product, id=item_id)
+            
+            item.quantity += product_quantity
             item.save()
             
-        return redirect('cart')
+        else:
+            # --- SCENARIO 2: NEW VARIANT (Create New Item) ---
+            # We create the item using the quantity captured (e.g., 1 or 2)
+            if current_user.is_authenticated:
+                item = CartItem.objects.create(product=product, quantity=product_quantity, user=current_user)
+            else:
+                item = CartItem.objects.create(product=product, quantity=product_quantity, cart=cart)
+            
+            if len(product_variation) > 0:
+                item.variations.clear()
+                item.variations.add(*product_variation)
+            item.save()
+            
+    else:
+        # --- SCENARIO 3: NEW PRODUCT (Create New Item) ---
+        if current_user.is_authenticated:
+            cart_item = CartItem.objects.create(
+                product = product,
+                quantity = product_quantity,
+                user = current_user,
+            )
+        else:
+            cart_item = CartItem.objects.create(
+                product = product,
+                quantity = product_quantity,
+                cart = cart,
+            )
+            
+        if len(product_variation) > 0:
+            cart_item.variations.clear()
+            cart_item.variations.add(*product_variation)
+        cart_item.save()
+    
+    return redirect('cart:cart')
 
 def remove_cart(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
@@ -138,10 +138,9 @@ def remove_cart(request, product_id, cart_item_id):
             cart_item.delete()
             
     except CartItem.DoesNotExist:
-        pass # Silently fail if the item isn't found
+        pass 
         
-    return redirect('cart')
-
+    return redirect('cart:cart')
 
 def remove_cart_item(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
@@ -157,9 +156,9 @@ def remove_cart_item(request, product_id, cart_item_id):
         cart_item.delete()
         
     except CartItem.DoesNotExist:
-        pass # Silently fail if the item isn't found
+        pass 
         
-    return redirect('cart')
+    return redirect('cart:cart')
 
 
 def cart(request, total=0, quantity=0, cart_items=None):
@@ -171,7 +170,6 @@ def cart(request, total=0, quantity=0, cart_items=None):
             cart_items = CartItem.objects.filter(cart=cart, is_active=True)
         
         for cart_item in cart_items:
-            # This line already correctly uses the sub_total() helper (which we just fixed in the model)
             item_sub_total = cart_item.sub_total() 
             total += item_sub_total
             quantity += cart_item.quantity
@@ -196,8 +194,6 @@ def checkout(request):
         if cart_count == 0:
             return redirect('store:store')
 
-        # Calculate all totals needed for the summary section on checkout.html
-        # This will now use the corrected get_cart_totals function.
         total_cart_data = get_cart_totals(cart_items)
 
         context = {
@@ -208,6 +204,5 @@ def checkout(request):
         return render(request, 'orders/checkout.html', context)
 
     except Exception as e:
-        # Simple error handling
         print(f"Error in checkout view: {e}")
-        return redirect('cart')
+        return redirect('cart:cart')

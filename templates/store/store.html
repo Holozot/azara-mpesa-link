@@ -3,32 +3,6 @@
 
 {% block content %}
 
-<style>
-    /* 1. Scrollable Dropdown for Brands */
-    .filter-dropdown-menu {
-        max-height: 250px;
-        overflow-y: auto;
-        min-width: 250px;
-        padding: 10px;
-        z-index: 1050; 
-        
-        /* FORCE LEFT ALIGNMENT */
-        left: 0 !important; 
-        right: auto !important;
-        transform: none !important; /* Prevents Popper.js from messing up position */
-        margin-top: 5px;
-    }
-
-    /* 2. The Filter Container when open */
-    .filter-panel-container {
-        background-color: #f9f9f9;
-        border: 1px solid #eee;
-        border-radius: 5px;
-        padding: 15px;
-        margin-top: 10px;
-    }
-</style>
-
 <section class="section-pagetop bg">
 <div class="container">
     {% if 'search' in request.path %}
@@ -114,18 +88,19 @@
                         
                         <div class="dropdown-menu filter-dropdown-menu shadow-sm text-left" aria-labelledby="brandDropdown">
                             <h6 class="dropdown-header">Available Brands</h6>
-                            <div class="dropdown-divider"></div>
                             
-                            {% for brand in all_brands %}
-                            <div class="form-check px-4 py-1">
-                                <input class="form-check-input" type="checkbox" name="brands" value="{{ brand.id }}" id="brand{{ brand.id }}"
-                                {% if selected_brand_ids and brand.id in selected_brand_ids %} checked {% endif %}>
-                                <label class="form-check-label" for="brand{{ brand.id }}">
-                                    {{ brand.name }}
-                                </label>
+                            <div class="brand-scroll-list">
+                                {% for brand in all_brands %}
+                                <div class="form-check px-4 py-1">
+                                    <input class="form-check-input" type="checkbox" name="brands" value="{{ brand.id }}" id="brand{{ brand.id }}"
+                                    {% if selected_brand_ids and brand.id in selected_brand_ids %} checked {% endif %}>
+                                    <label class="form-check-label" for="brand{{ brand.id }}">
+                                        {{ brand.name }}
+                                    </label>
+                                </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
+                            </div>
                     </div>
 
                     <div class="input-group mr-3 mb-2" style="max-width: 250px;">

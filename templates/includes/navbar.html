@@ -52,8 +52,8 @@
                 <div class="col-lg col-md col-12 text-lg-right text-center mt-3 mt-md-0">
                     <div class="widgets-wrap d-flex justify-content-center justify-content-lg-end align-items-center">
                         
-                        <!-- FIX: The opening <a> tag now correctly wraps the icon content -->
-                        <a href="{% url 'cart' %}" class="widget-header mr-3 text-dark">
+                        <!-- The opening <a> tag now correctly wraps the icon content -->
+                        <a href="{% url 'cart:cart' %}" class="widget-header mr-3 text-dark">
                             <div class="icon">
                                 <i class="icon-sm rounded-circle border fa fa-shopping-cart"></i>
                                 <span class="notify" style="background-color: var(--azara-primary);">{{ cart_count }}</span>
