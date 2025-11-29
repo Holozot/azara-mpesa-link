@@ -20,7 +20,8 @@ class Payment(models.Model):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     payment_id = models.CharField(max_length=100)
     payment_method = models.CharField(max_length=100)
-    amount_paid = models.CharField(max_length=10)
+    # CHANGED: CharField -> DecimalField for accurate math
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2) 
     status = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -37,14 +38,16 @@ class Order(models.Model):
     phone = models.CharField(max_length=15)
     email = models.EmailField(max_length=50)
     
+    # Address Info
     estate = models.CharField(max_length=50, blank=True)
     city = models.CharField(max_length=50, blank=True)
     order_note = models.CharField(max_length=100, blank=True) 
     
     delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD, default='Delivery') 
     
-    # Financials (Tax removed)
+    # Financials (Tax removed, keeping simple totals)
     order_total = models.DecimalField(max_digits=10, decimal_places=2)
+    # Grand total allows adding delivery fees later if needed
     grand_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     
     status = models.CharField(max_length=10, choices=STATUS, default='New')
@@ -68,15 +71,19 @@ class OrderProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    product_variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, null=True, blank=True)
+    
+    # Links to the specific SKU (e.g., ID for "50ml")
+    product_variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)
+    
     quantity = models.IntegerField()
     product_price = models.DecimalField(max_digits=10, decimal_places=2)
     ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # Snapshots (Good practice: keeps data even if product is deleted)
     product_name = models.CharField(max_length=200, default='')
-    variant_details = models.CharField(max_length=200, blank=True, null=True)
+    variant_details = models.CharField(max_length=200, blank=True, null=True) # Stores "Size: 50ml" text
 
     def subtotal(self):
         return Decimal(self.product_price) * self.quantity

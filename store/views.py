@@ -3,11 +3,13 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 import json
 import logging
 import datetime
 from .mpesa_utils import initiate_stk_push
+from carts.models import CartItem 
 
 # --- IMPORTS ---
 from .models import Product, Category, Brand, ProductVariant, MpesaTransaction 
@@ -189,11 +191,17 @@ def search(request):
     return render(request, 'store/store.html', context)
 
 # --- REAL M-PESA & ORDER LOGIC ---
-
+@login_required(login_url='login')
 def my_orders_view(request):
-    """Shows real orders from the database."""
-    orders = Order.objects.all().order_by('-created_at')
-    context = {'orders': orders}
+    """
+    Shows orders belonging to the logged-in user.
+    """
+    # Fetch orders belonging to the user, ordered by newest first
+    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    
+    context = {
+        'orders': orders,
+    }
     return render(request, 'store/my_orders.html', context)
 
 def order_detail_view(request, order_id):
@@ -204,60 +212,111 @@ def order_detail_view(request, order_id):
     return render(request, 'store/order_detail.html', {'order': order})
 
 def stk_push_request(request, order_id):
-    """Triggers the real M-PESA STK Push."""
     order = get_object_or_404(Order, id=order_id)
     
     if request.method == 'POST':
         phone = request.POST.get('phone_number')
         amount = int(order.grand_total)
+        
+        # 1. Initiate M-Pesa
         response = initiate_stk_push(phone, amount, order.id)
         
         if response and response.get('ResponseCode') == '0':
             checkout_req_id = response.get('CheckoutRequestID')
+            
+            # 2. Create Transaction Record
             MpesaTransaction.objects.create(
                 order=order,
                 checkout_request_id=checkout_req_id,
                 amount=amount,
+                phone_number=phone,
                 status='Pending'
             )
+            
+            # 3. RENDER THE SENT STK PUSH PAGE
             return render(request, 'store/stk_push_sent.html', {'order': order})
+            
         else:
-            error = response.get('CustomerMessage', 'Failed to initiate.')
+            # 4. RENDER THE "FAILED" PAGE (Immediate connection error)
+            error = response.get('CustomerMessage', 'Failed to initiate M-Pesa.')
             return render(request, 'store/stk_push_failed.html', {'error': error})
 
-    return redirect('store:order_review', order_id=order.id)
+    return redirect('store:order_detail', order_id=order.id)
 
 @csrf_exempt
 def stk_push_callback(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            logger.info(f"M-PESA DATA: {data}")
             stk_callback = data.get('Body', {}).get('stkCallback', {})
             checkout_req_id = stk_callback.get('CheckoutRequestID')
-            result_code = stk_callback.get('ResultCode')
+            result_code = stk_callback.get('ResultCode') # 0 = Success, 1/1032 = Cancelled/Fail
+            
             transaction = MpesaTransaction.objects.get(checkout_request_id=checkout_req_id)
+            order = transaction.order
             
             if result_code == 0:
+                # --- SUCCESS SCENARIO ---
                 metadata = stk_callback.get('CallbackMetadata', {}).get('Item', [])
                 receipt_no = next((item['Value'] for item in metadata if item['Name'] == 'MpesaReceiptNumber'), None)
+                
+                # 1. Update Transaction
                 transaction.status = 'Successful'
                 transaction.mpesa_receipt_number = receipt_no
                 transaction.save()
-                order = transaction.order
-                order.status = 'PAID'
+                
+                # 2. Update Order
+                order.payment = Payment.objects.create(
+                    user=order.user,
+                    payment_id=receipt_no,
+                    payment_method='M-Pesa',
+                    amount_paid=order.grand_total,
+                    status='Completed'
+                )
+                order.is_ordered = True # Marks it as "Paid"
+                order.status = 'Accepted'
                 order.save()
+                
+                # 3. CLEAR THE CART ITEMS 
+                # Filter by the user attached to the order
+                CartItem.objects.filter(user=order.user).delete()
+                
             else:
+                # --- FAILURE SCENARIO ---
+                # User cancelled or insufficient funds
                 transaction.status = 'Failed'
                 transaction.save()
-        except Exception as e: logger.error(f"Error: {e}")
+                
+                # The items remain in the cart so the user can try again.
+                
+        except Exception as e:
+            logger.error(f"Error processing M-Pesa callback: {e}")
+            
     return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted"})
 
 def order_complete_view(request, order_id):
-    order = get_object_or_404(Order, id=order_id)
-    transaction = MpesaTransaction.objects.filter(order=order, status='Successful').first()
-    context = {'order': order, 'receipt_number': transaction.mpesa_receipt_number if transaction else "Pending/Failed"}
-    return render(request, 'store/order_complete.html', context)
+    try:
+        order = Order.objects.get(id=order_id)
+        
+        # Check if the Callback marked it as paid
+        if order.is_ordered:
+            # SUCCESS: Show the receipt
+            transaction = MpesaTransaction.objects.filter(order=order, status='Successful').first()
+            context = {
+                'order': order,
+                'receipt_number': transaction.mpesa_receipt_number if transaction else "N/A"
+            }
+            return render(request, 'store/order_complete.html', context)
+        else:
+            # FAILURE/PENDING:
+            # The callback hasn't arrived, or it failed.
+            # Redirect to the Failure page so customer can try again.
+            return render(request, 'store/stk_push_failed.html', {
+                'error': 'Payment not received yet. You may have cancelled the request or M-Pesa is delayed.'
+            })
+            
+    except Order.DoesNotExist:
+        return redirect('store:home')
 
 def order_receipt_view(request, order_id):
     order = get_object_or_404(Order, id=order_id)

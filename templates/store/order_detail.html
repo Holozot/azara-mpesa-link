@@ -1,116 +1,158 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Order #{{ order.id }} - Azara</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-    </style>
-</head>
-<body class="min-h-screen p-4 sm:p-8 flex items-center justify-center">
+{% extends 'base.html' %}
+{% load static %}
 
-    <div class="max-w-3xl w-full bg-white rounded-xl shadow-2xl overflow-hidden">
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+
+    <h4 class="text-center mb-4">Review Your Order</h4>
+
+    <div class="row">
         
-        <!-- Header Status Bar -->
-        <div class="bg-gray-900 p-6 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-white">Review Order</h1>
-                <p class="text-gray-400 text-sm">Order Reference: #{{ order.id }}</p>
-            </div>
-            <span class="px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide
-                {% if order.status == 'PAID' %}bg-green-500 text-white{% else %}bg-yellow-500 text-white{% endif %}">
-                {{ order.status }}
-            </span>
-        </div>
-
-        <div class="p-6 sm:p-10">
+        <aside class="col-lg-8">
             
-            <!-- Customer Info -->
-            <div class="mb-6 border-b pb-4">
-                <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Shipping To</h3>
-                <p class="text-gray-900 font-medium">{{ order.full_name }}</p>
-                <p class="text-gray-600">{{ order.phone }}</p>
-                <p class="text-gray-600">{{ order.email }}</p>
-                {% if order.estate %}<p class="text-gray-600">{{ order.estate }}, {{ order.city }}</p>{% endif %}
-            </div>
-
-            <!-- Order Items Summary -->
-            <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">Items in Cart</h2>
-            <div class="space-y-3 mb-8">
-                {% for item in order.orderproduct_set.all %}
-                <div class="flex justify-between items-center text-sm">
-                    <div class="flex items-center">
-                        <div class="h-8 w-8 rounded bg-gray-200 flex items-center justify-center mr-3 text-gray-500 font-bold">
-                            {{ item.quantity }}x
-                        </div>
-                        <span class="font-medium text-gray-700">{{ item.product.name }}</span>
-                    </div>
-                    <span class="font-semibold text-gray-900">Ksh {{ item.line_total|floatformat:2 }}</span>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0 text-dark">Shipping Information</h5>
                 </div>
-                {% empty %}
-                <p class="text-gray-500 italic">Loading items...</p>
-                {% endfor %}
-            </div>
-
-            <!-- Totals -->
-            <div class="bg-gray-50 p-4 rounded-lg mb-8">
-                <div class="flex justify-between text-gray-600 mb-2">
-                    <span>Subtotal</span>
-                    <span>Ksh {{ order.order_total|floatformat:2 }}</span>
-                </div>
-                
-                <div class="flex justify-between text-xl font-extrabold text-gray-900 border-t border-gray-200 pt-3 mt-2">
-                    <span>Total to Pay</span>
-                    <span class="text-pink-600">Ksh {{ order.grand_total|floatformat:2 }}</span>
+                <div class="card-body">
+                    <p class="mb-0">
+                        <strong>{{ order.full_name }}</strong><br>
+                        {{ order.phone }}<br>
+                        {{ order.email }}<br>
+                        {% if order.estate %}
+                            {{ order.estate }}, {{ order.city }}
+                        {% endif %}
+                        <br>
+                        {% if order.order_note %}
+                            <b>Note:</b> {{ order.order_note }}
+                        {% endif %}
+                    </p>
                 </div>
             </div>
 
-            <!-- INTEGRATED M-PESA PAYMENT FORM -->
-            <div class="border-2 border-green-500 rounded-xl p-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                    SECURE PAYMENT
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0 text-dark">Items Ordered</h5>
                 </div>
-                
-                <div class="flex items-center mb-4">
-                    <h3 class="text-lg font-bold text-green-700">Pay with M-PESA</h3>
+                <div class="table-responsive">
+                    <table class="table table-borderless table-shopping-cart">
+                        <thead class="text-muted">
+                            <tr class="small text-uppercase">
+                                <th scope="col">Product</th>
+                                <th scope="col" width="120">Price</th>
+                                <th scope="col" width="120">Qty</th>
+                                <th scope="col" width="120" class="text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.orderproduct_set.all %}
+                            <tr>
+                                <td>
+                                    <figure class="itemside align-items-center">
+                                        <div class="aside">
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" class="img-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                            {% else %}
+                                                <img src="{% static 'images/no_image.png' %}" class="img-sm" style="width: 60px;">
+                                            {% endif %}
+                                        </div>
+                                        <figcaption class="info">
+                                            <span class="title text-dark font-weight-bold">{{ item.product.name }}</span>
+                                            <p class="text-muted small mb-0">
+                                                {% if item.variant_details %}
+                                                    {{ item.variant_details }}
+                                                {% endif %}
+                                            </p>
+                                        </figcaption>
+                                    </figure>
+                                </td>
+                                <td>
+                                    <div class="price-wrap">
+                                        <var class="price">Ksh {{ item.product_price }}</var>
+                                    </div>
+                                </td>
+                                <td>
+                                    <label>{{ item.quantity }}</label>
+                                </td>
+                                <td class="text-right">
+                                    <span class="font-weight-bold">Ksh {{ item.subtotal }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
-                <p class="text-sm text-gray-600 mb-4">
-                    Confirm your M-PESA number below. We will send a prompt to your phone.
-                </p>
+        </aside>
 
-                <!-- FIX: Added 'store:' namespace to the URL tag -->
-                <form action="{% url 'store:stk_push_request' order.id %}" method="POST" class="space-y-4">
-                    {% csrf_token %}
+        <aside class="col-lg-4">
+
+            <div class="card">
+                <div class="card-body">
                     
-                    <div>
-                        <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                        <div class="relative rounded-md shadow-sm">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-500 sm:text-sm">+254</span>
+                    <dl class="dlist-align">
+                        <dt>Total price:</dt>
+                        <dd class="text-right">Ksh {{ order.order_total }}</dd>
+                    </dl>
+                    
+                    <hr>
+                    <dl class="dlist-align">
+                        <dt>Grand Total:</dt>
+                        <dd class="text-right text-dark b"><strong>Ksh {{ order.grand_total }}</strong></dd>
+                    </dl>
+                    
+                    <hr>
+                    
+                    {% if not order.is_ordered %}
+                        
+                        <div class="bg-white p-4 rounded border shadow-sm" style="border-color: #28a745 !important; border-width: 2px !important;">
+                            <div class="text-center mb-3">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/1/15/M-PESA_LOGO-01.svg" alt="M-Pesa" height="40">
+                                <p class="small text-muted mt-2">Enter your phone number to pay.</p>
                             </div>
-                            <input type="text" name="phone_number" id="phone_number" 
-                                   value="{{ order.phone }}" 
-                                   class="focus:ring-green-500 focus:border-green-500 block w-full pl-12 py-3 sm:text-sm border-gray-300 rounded-md border" 
-                                   placeholder="700 000 000" required>
+
+                            <form action="{% url 'store:stk_push_request' order.id %}" method="POST">
+                                {% csrf_token %}
+                                
+                                <div class="form-group">
+                                    <label class="small font-weight-bold">M-Pesa Number</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text bg-white">+254</span>
+                                        </div>
+                                        <input type="text" name="phone_number" class="form-control" value="{{ order.phone }}" placeholder="700 000 000" required>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-success btn-block btn-lg font-weight-bold">
+                                    Pay Now <i class="fas fa-mobile-alt ml-2"></i>
+                                </button>
+                            </form>
                         </div>
-                    </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">A prompt will be sent to your phone.</small>
+                        </div>
 
-                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150">
-                        Pay Ksh {{ order.grand_total|floatformat:2 }} Now
-                    </button>
-                </form>
+                    {% else %}
+
+                        <div class="alert alert-success text-center" role="alert">
+                            <h4 class="alert-heading"><i class="fas fa-check-circle"></i> Paid</h4>
+                            <p>This order is complete.</p>
+                        </div>
+                        <a href="{% url 'store:store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+
+                    {% endif %}
+
+                </div>
             </div>
+        </aside>
 
-            <div class="text-center mt-6">
-                <a href="/" class="text-sm text-gray-500 hover:text-gray-900 underline">Cancel and continue shopping</a>
-            </div>
-
-        </div>
     </div>
+</div>
+</section>
 
-</body>
-</html>
+{% endblock %}

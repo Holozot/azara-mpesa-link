@@ -10,27 +10,25 @@ import datetime
 def place_order(request, total=0, quantity=0):
     current_user = request.user
 
-    # 1. Check if cart is empty
+    # 1. Check Cart
     cart_items = CartItem.objects.filter(user=current_user)
     cart_count = cart_items.count()
     if cart_count <= 0:
         return redirect('store:store')
 
-    # 2. Calculate Totals (Tax Inclusive Logic)
+    # 2. Calculate Totals
     grand_total = 0
+    tax = 0
     for cart_item in cart_items:
-        # Use get_display_price property
-        price = cart_item.product.get_display_price
-        total += (price * cart_item.quantity)
+        total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
-    
-    grand_total = total 
+    grand_total = total + tax
 
-    # 3. Process Form
+    # 3. Handle Form
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            # --- Create Order ---
+            # A. Create Order
             data = Order()
             data.user = current_user
             data.first_name = form.cleaned_data['first_name']
@@ -40,82 +38,52 @@ def place_order(request, total=0, quantity=0):
             data.estate = form.cleaned_data['estate']
             data.city = form.cleaned_data['city']
             data.order_note = form.cleaned_data['order_note']
-            
-            # Handle Delivery Selection
-            delivery_method = request.POST.get('delivery_method')
-            data.delivery_method = delivery_method
-            if delivery_method == 'Pickup':
-                data.estate = 'Pickup Location'
-                data.city = 'Nairobi'
-
             data.order_total = grand_total
             data.grand_total = grand_total
             data.ip = request.META.get('REMOTE_ADDR')
+            data.save()
             
-            # Generate Order Number
+            # B. Generate Order Number
             yr = int(datetime.date.today().strftime('%Y'))
             dt = int(datetime.date.today().strftime('%d'))
             mt = int(datetime.date.today().strftime('%m'))
-            d = datetime.date(yr, mt, dt)
-            current_date = d.strftime("%Y%m%d")
-            timestamp = datetime.datetime.now().strftime("%H%M%S")
-            order_number = f"{current_date}{current_user.id}{timestamp}"
+            d = datetime.date(yr,mt,dt)
+            current_date = d.strftime("%Y%m%d") 
+            order_number = current_date + str(data.id)
             data.order_number = order_number
-            
             data.save()
 
-            # --- Create Payment Record ---
-            payment = Payment(
-                user = current_user,
-                payment_id = f"MPESA-{order_number}", 
-                payment_method = 'M-Pesa',
-                amount_paid = str(grand_total),
-                status = 'Pending', 
-            )
-            payment.save()
-            
-            data.payment = payment
-            data.is_ordered = False
-            data.save()
-
-            # --- Save Order Products ---
+            # C. CREATE ORDER PRODUCTS 
             for item in cart_items:
                 order_product = OrderProduct()
-                order_product.order = data
-                order_product.payment = payment
-                order_product.user = current_user
-                order_product.product = item.product
+                order_product.order_id = data.id
+                order_product.user_id = request.user.id
+                order_product.product_id = item.product_id
                 order_product.quantity = item.quantity
-                order_product.product_price = item.product.get_display_price
-                order_product.ordered = False
+                order_product.product_price = item.product.price
                 
-                # Handle Variants
-                variant = item.variations.first()
-                if variant:
-                    order_product.product_price = variant.price
-                    order_product.variant_details = variant.size_ml_g
-                
+                # Save Variant info if it exists
+                product_variation = item.variations.first()
+                if product_variation:
+                    order_product.product_variant = product_variation
+                    order_product.variant_details = str(product_variation) # Save as text backup
+
                 order_product.save()
-                
-                # Reduce Stock
-                if variant:
-                    variant.stock -= item.quantity
-                    variant.save()
-                else:
-                    if hasattr(item.product, 'stock'):
-                        item.product.stock -= item.quantity
-                        item.product.save()
 
-            # Clear Cart
-            CartItem.objects.filter(user=request.user).delete()
-
-            # --- FIX: USE NAMESPACE 'store:' ---
-            return redirect('store:order_review', order_id=data.id)
+            # D. Load the Payment Page
+            order = Order.objects.get(user=current_user, is_ordered=False, order_number=order_number)
+            context = {
+                'order': order,
+                'cart_items': cart_items,
+                'total': total,
+                'grand_total': grand_total,
+            }
+            return render(request, 'orders/order_detail.html', context)
+            
         else:
-            print("Form errors:", form.errors) 
-            return redirect('checkout') 
-    else:
-        return redirect('checkout')
+            return redirect('cart:checkout')
+            
+    return redirect('cart:checkout')
 
 @login_required(login_url='login')
 def order_complete(request):

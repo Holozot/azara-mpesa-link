@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+    <div class="row">
+        
+        <aside class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">My Account</h5>
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action active"> My Orders </a>
+                        <a href="#" class="list-group-item list-group-item-action"> Edit Profile </a>
+                        <a href="#" class="list-group-item list-group-item-action"> Change Password </a>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="col-md-9">
+            <article class="card">
+                <header class="card-header">
+                    <strong class="d-inline-block mr-3">Your Order History</strong>
+                </header>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Order #</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Total</th>
+                                    <th scope="col">Payment Status</th>
+                                    <th scope="col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if orders %}
+                                    {% for order in orders %}
+                                    <tr>
+                                        <th scope="row">{{ order.order_number }}</th>
+                                        <td>{{ order.created_at|date:"d M Y" }}</td>
+                                        <td>KES {{ order.order_total }}</td>
+                                        
+                                        <td>
+                                            {% if order.status == 'New' %}
+                                                <span class="badge badge-primary">New</span>
+                                            {% elif order.status == 'Accepted' %}
+                                                <span class="badge badge-info">Accepted</span>
+                                            {% elif order.status == 'Completed' %}
+                                                <span class="badge badge-success">Delivered</span>
+                                            {% elif order.status == 'Cancelled' %}
+                                                <span class="badge badge-danger">Cancelled</span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">{{ order.status }}</span>
+                                            {% endif %}
+
+                                            {% if order.is_ordered %}
+                                                <span class="badge badge-success"><i class="fa fa-check"></i> Paid</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">Pending</span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>
+                                            <a href="{% url 'store:order_detail' order.id %}" class="btn btn-outline-primary btn-sm">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">You have placed no orders yet.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div> 
+                </div> 
+            </article> 
+        </main>
+    </div>
+</div> 
+</section>
+
+{% endblock %}
