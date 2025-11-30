@@ -13,7 +13,7 @@ from carts.models import CartItem
 
 # --- IMPORTS ---
 from .models import Product, Category, Brand, ProductVariant, MpesaTransaction 
-from orders.models import Order 
+from orders.models import Order , Payment
 # ---------------
 
 logger = logging.getLogger(__name__)

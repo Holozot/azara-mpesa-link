@@ -69,7 +69,7 @@ def initiate_stk_push(phone_number, amount, order_id):
         phone_number = phone_number[1:]
     
     # This must match  urls.py structure
-    callback_url = f"{BASE_APP_URL}/store/mpesa/callback/" 
+    callback_url = f"{BASE_APP_URL}/mpesa/callback/"
 
     headers = {
         'Authorization': f'Bearer {access_token}',
