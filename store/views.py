@@ -209,7 +209,7 @@ def order_detail_view(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if order.status == 'PAID':
         return redirect('store:order_receipt', order_id=order.id)
-    return render(request, 'store/order_detail.html', {'order': order})
+    return render(request, 'orders/order_detail.html', {'order': order})
 
 def stk_push_request(request, order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -306,7 +306,7 @@ def order_complete_view(request, order_id):
                 'order': order,
                 'receipt_number': transaction.mpesa_receipt_number if transaction else "N/A"
             }
-            return render(request, 'store/order_complete.html', context)
+            return render(request, 'orders/order_complete.html', context)
         else:
             # FAILURE/PENDING:
             # The callback hasn't arrived, or it failed.

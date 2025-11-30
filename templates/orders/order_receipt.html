@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="section-content padding-y bg">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm print-area">
+                    <div class="card-body">
+                        
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <h4 class="card-title mb-0">Order Receipt</h4>
+                                <p class="text-muted small">Thank you for your business</p>
+                            </div>
+                            <div class="col-6 text-right">
+                                <h3 class="text-success font-weight-bold">PAID</h3>
+                                <p class="mb-0"><strong>M-Pesa Ref:</strong> {{ receipt_number }}</p>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <p class="mb-1 text-muted">Billed To:</p>
+                                <h6 class="mb-0">{{ order.full_name }}</h6>
+                                <p class="mb-0">{{ order.email }}</p>
+                                <p class="mb-0">{{ order.phone }}</p>
+                                <p class="mb-0">{{ order.estate }}, {{ order.city }}</p>
+                            </div>
+                            <div class="col-md-6 text-md-right">
+                                <p class="mb-1 text-muted">Order Details:</p>
+                                <p class="mb-0"><strong>Order ID:</strong> {{ order.order_number }}</p>
+                                <p class="mb-0"><strong>Date:</strong> {{ order.created_at|date:"M d, Y" }}</p>
+                                <p class="mb-0"><strong>Payment Method:</strong> M-Pesa</p>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Item</th>
+                                        <th width="15%">Price</th>
+                                        <th width="15%">Qty</th>
+                                        <th width="15%" class="text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.orderproduct_set.all %}
+                                    <tr>
+                                        <td>
+                                            <span class="font-weight-bold">{{ item.product.name }}</span>
+                                            <br>
+                                            {% if item.variant_details %}
+                                                <small class="text-muted">Size: {{ item.variant_details }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ item.product_price }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td class="text-right">{{ item.subtotal }}</td> </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row justify-content-end">
+                            <div class="col-md-5">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td><strong>Subtotal:</strong></td>
+                                        <td class="text-right">KES {{ order.order_total }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Tax:</strong></td>
+                                        <td class="text-right">KES 0.00</td>
+                                    </tr>
+                                    <tr class="border-top">
+                                        <td><h5 class="font-weight-bold">Grand Total:</h5></td>
+                                        <td class="text-right"><h5 class="font-weight-bold text-success">KES {{ order.grand_total }}</h5></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center no-print">
+                            <a href="{% url 'store:store' %}" class="btn btn-primary">Continue Shopping</a>
+                            <button onclick="window.print()" class="btn btn-light border"><i class="fas fa-print"></i> Print Receipt</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @media print {
+        .no-print, header, footer { display: none !important; }
+        .print-area { border: none !important; box-shadow: none !important; }
+        body { background-color: white !important; }
+    }
+</style>
+{% endblock %}
