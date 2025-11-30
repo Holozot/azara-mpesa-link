@@ -27,15 +27,28 @@ def generate_stk_password(timestamp):
 
 def generate_access_token():
     try:
+        # 1. Clean the keys (Remove accidental spaces/newlines from Render)
+        consumer_key = str(MPESA_CONSUMER_KEY).strip()
+        consumer_secret = str(MPESA_CONSUMER_SECRET).strip()
+        
         api_url = f"{MPESA_API_URL}/oauth/v1/generate?grant_type=client_credentials"
+        
+        # 2. Make the request using the CLEANED keys
         response = requests.get(
             api_url, 
-            auth=HTTPBasicAuth(MPESA_CONSUMER_KEY, MPESA_CONSUMER_SECRET)
+            auth=HTTPBasicAuth(consumer_key, consumer_secret)
         )
+        
+        # Check for errors
         response.raise_for_status() 
         token_data = response.json()
         return token_data.get('access_token')
+        
     except Exception as e:
+        # Print the detailed response text if available (helps debugging)
+        if 'response' in locals():
+            print(f"Safaricom Response Body: {response.text}")
+            
         print(f"Error generating Access Token: {e}")
         return None
 
