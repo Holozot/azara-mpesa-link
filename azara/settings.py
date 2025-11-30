@@ -6,6 +6,10 @@ from pathlib import Path
 import os
 import dj_database_url
 
+from dotenv import load_dotenv
+
+load_dotenv() 
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -27,6 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'cloudinary',
     'store',
     'accounts',
     'carts',
@@ -65,7 +71,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'azara.wsgi.application'
-
 
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
@@ -147,3 +152,11 @@ SESSION_SAVE_EVERY_REQUEST = True
 # 3. Close session when browser closes
 # True: Closing Chrome/Firefox logs them out immediately, regardless of the time left.
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+
+# --- CLOUDINARY CONFIGURATION ---
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
+}
