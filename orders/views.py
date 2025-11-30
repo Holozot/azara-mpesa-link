@@ -60,7 +60,11 @@ def place_order(request, total=0, quantity=0):
                 order_product.user_id = request.user.id
                 order_product.product_id = item.product_id
                 order_product.quantity = item.quantity
-                order_product.product_price = item.product.price
+                # Find the variant (size) for this item
+                variant = item.variations.first()
+
+                # Save the variant's price
+                orderproduct.product_price = variant.price
                 
                 # Save Variant info if it exists
                 product_variation = item.variations.first()
