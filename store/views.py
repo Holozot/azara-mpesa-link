@@ -297,6 +297,7 @@ def stk_push_callback(request):
 def order_complete_view(request, order_id):
     try:
         order = Order.objects.get(id=order_id)
+        ordered_products = OrderProduct.objects.filter(order=order)
         
         # Check if the Callback marked it as paid
         if order.is_ordered:
@@ -304,6 +305,7 @@ def order_complete_view(request, order_id):
             transaction = MpesaTransaction.objects.filter(order=order, status='Successful').first()
             context = {
                 'order': order,
+                'ordered_products': ordered_products,
                 'receipt_number': transaction.mpesa_receipt_number if transaction else "N/A"
             }
             return render(request, 'orders/order_complete.html', context)
