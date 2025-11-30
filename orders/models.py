@@ -71,6 +71,7 @@ class OrderProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    payment = models.ForeignKey('Payment', on_delete=models.SET_NULL, blank=True, null=True)
     
     # Links to the specific SKU (e.g., ID for "50ml")
     product_variant = models.ForeignKey(ProductVariant, on_delete=models.SET_NULL, null=True, blank=True)

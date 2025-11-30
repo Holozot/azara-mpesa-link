@@ -68,18 +68,22 @@ def place_order(request, total=0, quantity=0):
                 orderproduct.product_id = item.product_id
                 orderproduct.quantity = item.quantity
                 
-                # 3. Set price from Variant
+                # 3. Get the specific Variant (Size)
                 variant = item.variations.first()
-                orderproduct.product_price = variant.price 
                 
-                # 4. Save
-                orderproduct.ordered = True
-                orderproduct.save()
+                # 4. Save Price AND the Link to the Variant
+                if variant:
+                    orderproduct.product_price = variant.price 
+                    orderproduct.product_variant = variant  # <--- THIS IS THE FIX
+                    
+                    # Optional: Snapshot the name so it stays forever
+                    orderproduct.variant_details = variant.size_ml_g 
+                else:
+                    # Fallback if no variant found (shouldn't happen)
+                    orderproduct.product_price = 0 
 
-                # 5. Add variations (Many-to-Many)
-                cart_item = CartItem.objects.get(id=item.id)
-                product_variation = cart_item.variations.all()
-                orderproduct.variations.set(product_variation)
+                # 5. Save to database
+                orderproduct.ordered = True
                 orderproduct.save()
 
             # D. Load the Payment Page or Trigger M-Pesa
