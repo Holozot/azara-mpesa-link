@@ -53,26 +53,33 @@ def place_order(request, total=0, quantity=0):
             data.order_number = order_number
             data.save()
 
-            # C. CREATE ORDER PRODUCTS 
-            for item in cart_items:
-                order_product = OrderProduct()
-                order_product.order_id = data.id
-                order_product.user_id = request.user.id
-                order_product.product_id = item.product_id
-                order_product.quantity = item.quantity
-                # Find the variant (size) for this item
-                variant = item.variations.first()
+        # C. CREATE ORDER PRODUCTS 
 
-                # Save the variant's price
-                orderproduct.product_price = variant.price
-                
-                # Save Variant info if it exists
-                product_variation = item.variations.first()
-                if product_variation:
-                    order_product.product_variant = product_variation
-                    order_product.variant_details = str(product_variation) # Save as text backup
+        # Loop through the cart items
+        for item in cart_items:
+            # 1. CREATE the object first (This line must be first!)
+            orderproduct = OrderProduct()
 
-                order_product.save()
+            # 2. Fill in the standard details
+            orderproduct.order_id = order.id
+            #orderproduct.payment = payment
+            orderproduct.user_id = request.user.id
+            orderproduct.product_id = item.product_id
+            orderproduct.quantity = item.quantity
+            
+            # 3. NOW set the price (The fix we added)
+            variant = item.variations.first()
+            orderproduct.product_price = variant.price 
+            
+            # 4. Save to database
+            orderproduct.ordered = True
+            orderproduct.save()
+
+            # 5. Add variations (Many-to-Many needs to happen AFTER save)
+            cart_item = CartItem.objects.get(id=item.id)
+            product_variation = cart_item.variations.all()
+            orderproduct.variations.set(product_variation)
+            orderproduct.save()
 
             # D. Load the Payment Page
             order = Order.objects.get(user=current_user, is_ordered=False, order_number=order_number)
