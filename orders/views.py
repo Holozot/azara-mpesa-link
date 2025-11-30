@@ -53,36 +53,36 @@ def place_order(request, total=0, quantity=0):
             data.order_number = order_number
             data.save()
 
-        # C. CREATE ORDER PRODUCTS 
+            # Define 'order' variable here 
+            order = data 
 
-        # Loop through the cart items
-        for item in cart_items:
-            # 1. CREATE the object first (This line must be first!)
-            orderproduct = OrderProduct()
+            # C. CREATE ORDER PRODUCTS 
+            # This loop must be indented INSIDE the 'if form.is_valid()' block
+            for item in cart_items:
+                # 1. CREATE the object
+                orderproduct = OrderProduct()
 
-            # 2. Fill in the standard details
-            orderproduct.order_id = order.id
-            #orderproduct.payment = payment
-            orderproduct.user_id = request.user.id
-            orderproduct.product_id = item.product_id
-            orderproduct.quantity = item.quantity
-            
-            # 3. NOW set the price (The fix we added)
-            variant = item.variations.first()
-            orderproduct.product_price = variant.price 
-            
-            # 4. Save to database
-            orderproduct.ordered = True
-            orderproduct.save()
+                # 2. Fill details
+                orderproduct.order_id = order.id  # Now 'order' exists!
+                orderproduct.user_id = request.user.id
+                orderproduct.product_id = item.product_id
+                orderproduct.quantity = item.quantity
+                
+                # 3. Set price from Variant
+                variant = item.variations.first()
+                orderproduct.product_price = variant.price 
+                
+                # 4. Save
+                orderproduct.ordered = True
+                orderproduct.save()
 
-            # 5. Add variations (Many-to-Many needs to happen AFTER save)
-            cart_item = CartItem.objects.get(id=item.id)
-            product_variation = cart_item.variations.all()
-            orderproduct.variations.set(product_variation)
-            orderproduct.save()
+                # 5. Add variations (Many-to-Many)
+                cart_item = CartItem.objects.get(id=item.id)
+                product_variation = cart_item.variations.all()
+                orderproduct.variations.set(product_variation)
+                orderproduct.save()
 
-            # D. Load the Payment Page
-            order = Order.objects.get(user=current_user, is_ordered=False, order_number=order_number)
+            # D. Load the Payment Page or Trigger M-Pesa
             context = {
                 'order': order,
                 'cart_items': cart_items,
@@ -92,9 +92,10 @@ def place_order(request, total=0, quantity=0):
             return render(request, 'orders/order_detail.html', context)
             
         else:
-            return redirect('cart:checkout')
+            # Form invalid
+            return redirect('checkout') # Or print(form.errors)
             
-    return redirect('cart:checkout')
+    return redirect('checkout')
 
 @login_required(login_url='login')
 def order_complete(request):
