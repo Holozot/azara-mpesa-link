@@ -76,12 +76,14 @@ def initiate_stk_push(phone_number, amount, order_id):
         'Content-Type': 'application/json'
     }
 
+    actual_amount= 1
+
     payload = {
         "BusinessShortCode": MPESA_SHORTCODE,
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
-        "Amount": int(amount), 
+        "Amount": actual_amount,
         "PartyA": phone_number,
         "PartyB": MPESA_SHORTCODE,
         "PhoneNumber": phone_number,

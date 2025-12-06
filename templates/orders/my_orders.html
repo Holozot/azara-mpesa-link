@@ -8,16 +8,25 @@
     <div class="row">
         
         <aside class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title mb-4">My Account</h5>
-                    <div class="list-group list-group-flush">
-                        <a href="#" class="list-group-item list-group-item-action active"> My Orders </a>
-                        <a href="#" class="list-group-item list-group-item-action"> Edit Profile </a>
-                        <a href="#" class="list-group-item list-group-item-action"> Change Password </a>
-                    </div>
-                </div>
-            </div>
+            <ul class="list-group">
+                <a class="list-group-item" href="{% url 'dashboard' %}"> 
+                    <i class="fa fa-tachometer-alt"></i> Dashboard 
+                </a>
+                
+                <a class="list-group-item active" 
+                   style="background-color: #E94E8C; color: white; border-color: #E94E8C;" 
+                   href="{% url 'store:my_orders' %}"> 
+                    <i class="fa fa-list" style="color: white;"></i> My Orders 
+                </a>
+                
+                <a class="list-group-item" style="color: #E94E8C;" href="{% url 'carts:cart' %}"> 
+                    <i class="fa fa-shopping-cart" style="color: #E94E8C;"></i> My Cart 
+                </a>
+                
+                <a class="list-group-item text-danger" href="{% url 'logout' %}"> 
+                    <i class="fa fa-sign-out-alt"></i> Logout 
+                </a>
+            </ul>
         </aside>
 
         <main class="col-md-9">
@@ -32,8 +41,7 @@
                                 <tr>
                                     <th scope="col">Order #</th>
                                     <th scope="col">Date</th>
-                                    <th scope="col">Total</th>
-                                    <th scope="col">Payment Status</th>
+                                    <th scope="col">Grand Total</th> <th scope="col">Status</th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
@@ -43,7 +51,8 @@
                                     <tr>
                                         <th scope="row">{{ order.order_number }}</th>
                                         <td>{{ order.created_at|date:"d M Y" }}</td>
-                                        <td>KES {{ order.order_total }}</td>
+                                        
+                                        <td>KES {{ order.grand_total }}</td>
                                         
                                         <td>
                                             {% if order.status == 'New' %}
@@ -61,18 +70,23 @@
                                             {% if order.is_ordered %}
                                                 <span class="badge badge-success"><i class="fa fa-check"></i> Paid</span>
                                             {% else %}
-                                                <span class="badge badge-warning">Pending</span>
+                                                <span class="badge badge-warning">Unpaid</span>
                                             {% endif %}
                                         </td>
 
                                         <td>
-                                            <a href="{% url 'store:order_detail' order.id %}" class="btn btn-outline-primary btn-sm">View</a>
+                                            <a href="{% url 'store:order_detail' order.id %}" 
+                                               class="btn btn-outline-primary btn-sm"
+                                               style="border-color: #E94E8C; color: #E94E8C;">View</a>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="5" class="text-center">You have placed no orders yet.</td>
+                                        <td colspan="5" class="text-center p-4">
+                                            <h4>You have placed no orders yet.</h4>
+                                            <a href="{% url 'store:store' %}" class="btn btn-primary mt-3">Start Shopping</a>
+                                        </td>
                                     </tr>
                                 {% endif %}
                             </tbody>
