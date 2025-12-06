@@ -18,16 +18,27 @@ def place_order(request, total=0, quantity=0):
 
     # 2. Calculate Totals
     grand_total = 0
-    tax = 0
+    delivery_fee = 0
     for cart_item in cart_items:
         total += cart_item.sub_total()
         quantity += cart_item.quantity
-    grand_total = total + tax
+    grand_total = total + delivery_fee
 
     # 3. Handle Form
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
+
+            # DELIVERY FEE LOGIC 
+            delivery_fee = 0
+            # Check if user filled in Estate and City
+            if form.cleaned_data.get('estate') and form.cleaned_data.get('city'):
+                delivery_fee = 100.00 
+            
+            # Recalculate Grand Total (Subtotal + Delivery)
+            grand_total = total + delivery_fee
+
+
             # A. Create Order
             data = Order()
             data.user = current_user
@@ -38,7 +49,8 @@ def place_order(request, total=0, quantity=0):
             data.estate = form.cleaned_data['estate']
             data.city = form.cleaned_data['city']
             data.order_note = form.cleaned_data['order_note']
-            data.order_total = grand_total
+            data.delivery_fee = delivery_fee
+            data.order_total = total
             data.grand_total = grand_total
             data.ip = request.META.get('REMOTE_ADDR')
             data.save()
