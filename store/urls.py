@@ -26,4 +26,6 @@ urlpatterns = [
     
     # Dashboard History
     path('orders/', views.my_orders_view, name='my_orders'),
+
+    path('order_detail/<int:order_id>/', views.order_detail_view, name='order_detail'),
 ]
