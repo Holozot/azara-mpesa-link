@@ -9,8 +9,12 @@ class AccountAdmin(UserAdmin):
     ordering = ('-date_joined',)
 
     # These make the admin read-only for standard view logic to prevent errors with our custom model
-    filter_horizontal = ()
+    filter_horizontal = ('groups', 'user_permissions',)
     list_filter = ()
-    fieldsets = ()
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal Info', {'fields': ('first_name', 'last_name', 'username', 'phone_number', 'security_question', 'security_answer')}),
+        ('Permissions', {'fields': ('is_admin', 'is_staff', 'is_active', 'is_superadmin', 'groups', 'user_permissions')}),
+    )
 
 admin.site.register(Account, AccountAdmin)
