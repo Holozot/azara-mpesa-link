@@ -4,6 +4,7 @@ from .models import Account
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required 
+from django.contrib.auth.hashers import make_password, check_password
 from carts.models import Cart, CartItem
 from carts.views import _cart_id
 from orders.models import Order
@@ -25,6 +26,8 @@ def register(request):
             security_question = form.cleaned_data['security_question']
             security_answer = form.cleaned_data['security_answer']
 
+            encrypted_answer = make_password(security_answer.lower())
+
             # Create user
             user = Account.objects.create_user(
                 first_name=first_name, 
@@ -35,9 +38,8 @@ def register(request):
             )
             
             user.phone_number = phone_number
-            # --- CRITICAL FIX: Save Security Fields ---
             user.security_question = security_question
-            user.security_answer = security_answer
+            user.security_answer = encrypted_answer
             
             user.is_active = True 
             user.save()
@@ -157,8 +159,7 @@ def security_question_step(request):
         new_password = request.POST['new_password']
         confirm_password = request.POST['confirm_password']
         
-        # Check Answer (Case insensitive)
-        if answer.lower().strip() != user.security_answer.lower().strip():
+        if not check_password(answer.lower().strip(), user.security_answer):
             messages.error(request, "Incorrect answer to security question.")
             return redirect('security_question_step')
             
@@ -171,7 +172,7 @@ def security_question_step(request):
         user.set_password(new_password)
         user.save()
         messages.success(request, "Password reset successfully! Please login.")
-        del request.session['reset_user_id'] # Clean up session
+        del request.session['reset_user_id'] 
         return redirect('login')
 
     # Get the readable version of the question
