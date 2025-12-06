@@ -13,7 +13,7 @@ class RegistrationForm(forms.ModelForm):
     }))
 
     security_question = forms.ChoiceField(choices=Account.SECURITY_QUESTIONS, widget=forms.Select(attrs={'class': 'form-control'}))
-    security_answer = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Your Answer', 'class': 'form-control'}))
+    security_answer = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Your Answer (Hidden)', 'class': 'form-control' }))
 
     class Meta:
         model = Account
@@ -57,7 +57,7 @@ class UserForm(forms.ModelForm):
     phone_number = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
     
     security_question = forms.ChoiceField(choices=Account.SECURITY_QUESTIONS, widget=forms.Select(attrs={'class': 'form-control'}))
-    security_answer = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    security_answer = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     class Meta:
         model = Account

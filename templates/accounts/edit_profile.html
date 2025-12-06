@@ -68,8 +68,16 @@
                             </div>
                             <div class="form-group col-md-6">
                                 <label>Security Answer</label>
-                                {{ user_form.security_answer }}
-                            </div>
+                                
+                                <div class="input-group">
+                                    {{ user_form.security_answer }}
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" onclick="toggleEditProfileAnswer()" style="cursor: pointer;">
+                                            <i class="fa fa-eye" id="toggleIconProfile"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                </div>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
@@ -78,5 +86,23 @@
                 </div> </article> </main>
     </div> </div>
 </section>
+
+<script>
+    function toggleEditProfileAnswer() {
+        // Django automatically names the field 'id_security_answer'
+        var input = document.getElementById("id_security_answer");
+        var icon = document.getElementById("toggleIconProfile");
+        
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
 
 {% endblock %}
