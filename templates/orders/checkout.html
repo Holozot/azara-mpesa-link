@@ -5,32 +5,39 @@
 
 <section class="section-content padding-y bg">
     <div class="container">
-        
+
+        <!-- START FORM: Wraps both columns so the button works -->
         <form action="{% url 'orders:place_order' %}" method="POST">
         {% csrf_token %}
 
         <div class="row">
+            <!-- LEFT COLUMN: INPUTS -->
             <main class="col-md-9">
                 <article class="card mb-4 shadow-sm">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Delivery & Billing Information</h4>
-                        
+
+                        <!-- 1. CONTACT DETAILS -->
                         <div class="form-row">
                             <div class="col form-group">
                                 <label>First Name</label>
                                 <input type="text" name="first_name" class="form-control" required value="{{ user.first_name }}">
                             </div>
+
                             <div class="col form-group">
                                 <label>Last Name</label>
                                 <input type="text" name="last_name" class="form-control" required value="{{ user.last_name }}">
                             </div>
                         </div>
-                        
+
+                       
+
                         <div class="form-row">
                             <div class="col form-group">
                                 <label>Phone Number</label>
                                 <input type="text" name="phone" class="form-control" required value="{{ user.phone_number|default:'' }}">
                             </div>
+
                             <div class="col form-group">
                                 <label>Email Address</label>
                                 <input type="email" name="email" class="form-control" required value="{{ user.email }}">
@@ -38,6 +45,8 @@
                         </div>
 
                         <hr class="mb-4">
+
+                        <!-- 2. FULFILMENT METHOD (Radio Buttons) -->
 
                         <h4 class="card-title mb-4">Fulfilment Method</h4>
                         <div class="form-group" id="deliveryMethodGroup">
@@ -47,6 +56,7 @@
                                     <i class="fa fa-truck mr-1"></i> Delivery (Courier charges apply)
                                 </div>
                             </label>
+
                             <label class="custom-control custom-radio custom-control-inline">
                                 <input type="radio" name="delivery_method" class="custom-control-input" value="Pickup" id="radioPickup">
                                 <div class="custom-control-label">
@@ -55,6 +65,7 @@
                             </label>
                         </div>
 
+                        <!-- 3. ADDRESS FIELDS (Hidden if Pickup selected) -->
                         <div id="addressFields">
                             <h5 class="card-title mt-4 mb-3">Delivery Address</h5>
                             <div class="form-row">
@@ -62,6 +73,7 @@
                                     <label>Estate / Building</label>
                                     <input type="text" name="estate" class="form-control" placeholder="e.g., Kilimani Road, Apt C5">
                                 </div>
+
                                 <div class="col form-group">
                                     <label>City / Town</label>
                                     <input type="text" name="city" class="form-control" placeholder="e.g., Nairobi">
@@ -71,22 +83,27 @@
 
                         <hr class="mb-4">
 
+                        <!-- 4. PAYMENT METHOD -->
                         <h4 class="card-title mb-4">Payment Method</h4>
                         <div class="form-group">
                             <label class="custom-control custom-radio">
                                 <input type="radio" checked class="custom-control-input" name="payment_method" value="M-Pesa">
                                 <div class="custom-control-label">
-                                    <i class="fas fa-mobile-alt mr-2" style="color: #4CAF50;"></i> 
+                                    <i class="fas fa-mobile-alt mr-2" style="color: #4CAF50;"></i>
                                     <strong>M-Pesa (Safaricom)</strong>
                                     <p class="text-muted small">You will receive an M-Pesa prompt on your phone to complete payment.</p>
                                 </div>
                             </label>
                         </div>
-                        
-                    </div> 
-                </article> 
+
+                    </div>
+                </article>
             </main>
-            
+
+           
+
+            <!-- RIGHT COLUMN: SUMMARY & SUBMIT -->
+
             <aside class="col-md-3">
                 <div class="card shadow-sm">
                     <div class="card-body">
@@ -95,10 +112,12 @@
                             <dt>Subtotal:</dt>
                             <dd class="text-right">Ksh {{ total_cart_data.sub_total|default:"0.00" }}</dd>
                         </dl>
+
                         <dl class="dlist-align">
                             <dt> Delivery Fee:</dt>
-                            <dd class="text-right" id="deliveryFeeDisplay">KES 100</dd> 
+                            <dd class="text-right" id="deliveryFeeDisplay">Ksh 100.00</dd>
                         </dl>
+
                         <dl class="dlist-align">
                             <dt>Total:</dt>
                             <dd class="text-right h5 text-success">
@@ -106,26 +125,33 @@
                             </dd>
                         </dl>
                         <hr>
-                        
+
+                        <!-- UPDATED: Increased max-height for better visibility -->
                         <p class="text-center mb-3">
-                            <img src="{% static 'images/mpesa.png' %}" alt="M-Pesa" style="max-height: 40px;">
-                        </p>
-                        
+                            <img src="{% static 'images/mpesa_logo.png' %}" alt="M-Pesa" style="max-height: 50px;">
+                        </p>           
+
+                        <!-- SUBMIT BUTTON -->
                         <button type="submit" class="btn btn-primary btn-block">
                             Place Order
                         </button>
-                        
-                        <div class="alert alert-warning mt-3 small p-2" role="alert" style="font-size: 12px; line-height: 1.3; background-color: #fff3cd; border-color: #ffeeba; color: #856404;">
+
+                       <div class="alert alert-warning mt-3 small p-2" role="alert" style="font-size: 12px; line-height: 1.3; background-color: #fff3cd; border-color: #ffeeba; color: #856404;">
                             <i class="fas fa-info-circle mr-1"></i> 
                             The standard delivery fee within Nairobi is <strong>100 shillings</strong>. 
                             For other locations, please choose pickup, and delivery arrangements will be made via phone call.
                         </div>
 
                         <a href="{% url 'store:store' %}" class="btn btn-light btn-block mt-2">Continue Shopping</a>
-                    </div> 
-                </div> 
+                    </div>
+                </div>
             </aside>
-        </div> </form> </div> </section>
+        </div> <!-- row.// -->
+        </form> <!-- End Form -->
+    </div> <!-- container .// -->
+</section>
+
+<!-- JAVASCRIPT FOR TOGGLING ADDRESS -->
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -135,34 +161,31 @@
         const estateInput = document.querySelector('input[name="estate"]');
         const cityInput = document.querySelector('input[name="city"]');
         const feeDisplay = document.getElementById('deliveryFeeDisplay');
-        
+       
         function toggleAddressFields() {
             if (radioDelivery.checked) {
-                // Logic for Delivery
                 addressFields.style.display = 'block';
                 estateInput.required = true;
                 cityInput.required = true;
-                
-                // CHANGE: Show KES 100 instead of "Calculated Offline"
-                feeDisplay.textContent = 'KES 100'; 
+                feeDisplay.textContent = 'Calculated Offline';
+
             } else {
-                // Logic for Pickup
                 addressFields.style.display = 'none';
                 estateInput.required = false;
                 cityInput.required = false;
-                
-                // Clear inputs if they switch to pickup
                 estateInput.value = '';
                 cityInput.value = '';
-                
                 feeDisplay.textContent = 'Free';
             }
+
         }
 
         radioDelivery.addEventListener('change', toggleAddressFields);
         radioPickup.addEventListener('change', toggleAddressFields);
-        toggleAddressFields(); // Run on load to set initial state
+        toggleAddressFields(); // Run on load
+
     });
+
 </script>
 
 {% endblock %}
