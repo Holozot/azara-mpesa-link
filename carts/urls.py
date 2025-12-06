@@ -1,8 +1,8 @@
 from django.urls import path
 from . import views
 
-# THIS IS CRITICAL: It defines the namespace 'cart' used in your templates
-app_name = 'cart'
+# THIS IS CRITICAL: It defines the namespace 'cart' used in templates
+app_name = 'carts'
 
 urlpatterns = [
     # Path for the main cart page
