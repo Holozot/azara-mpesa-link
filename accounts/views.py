@@ -141,7 +141,7 @@ def reset_password_validate(request):
             messages.error(request, 'This email does not exist.')
             return redirect('reset_password_validate')
             
-    return render(request, 'accounts/reset_password_1_email.html')
+    return render(request, 'accounts/reset_password_1.html')
 
 # --- FORGOT PASSWORD STEP 2: ASK QUESTION ---
 def security_question_step(request):
@@ -180,7 +180,7 @@ def security_question_step(request):
     context = {
         'question': question_label,
     }
-    return render(request, 'accounts/reset_password_2_question.html', context)
+    return render(request, 'accounts/reset_password_2.html', context)
 
 # --- EDIT PROFILE ---
 @login_required(login_url='login')
