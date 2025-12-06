@@ -4,18 +4,15 @@
 <section class="section-content padding-y">
     <div class="container">
         <div class="row">
-            <!-- Sidebar -->
             <aside class="col-md-3">
                 <ul class="list-group">
-                    <!-- ACTIVE DASHBOARD LINK: Background Pink, Text/Icon White -->
                     <a class="list-group-item active" 
                        style="background-color: #E94E8C; color: white; border-color: #E94E8C;" 
                        href="{% url 'dashboard' %}"> 
                         <i class="fa fa-tachometer-alt" style="color: white;"></i> Dashboard 
                     </a>
                     
-                    <!-- INACTIVE LINKS: Text/Icon Pink -->
-                    <a class="list-group-item" style="color: #E94E8C;" href="#"> 
+                    <a class="list-group-item" style="color: #E94E8C;" href="{% url 'store:my_orders' %}"> 
                         <i class="fa fa-shopping-bag" style="color: #E94E8C;"></i> My Orders 
                     </a>
                     
@@ -23,21 +20,20 @@
                         <i class="fa fa-shopping-cart" style="color: #E94E8C;"></i> My Cart 
                     </a> 
                     
-                    <a class="list-group-item" style="color: #E94E8C;" href="#"> 
+                    <a class="list-group-item" style="color: #E94E8C;" href="{% url 'edit_profile' %}"> 
                         <i class="fa fa-user-edit" style="color: #E94E8C;"></i> Edit Profile 
                     </a>
+
                     <a class="list-group-item" style="color: #E94E8C;" href="#"> 
                         <i class="fa fa-lock" style="color: #E94E8C;"></i> Change Password 
                     </a>
                     
-                    <!-- LOGOUT LINK: Kept red text-danger for visual security cue, but you can change it to pink too. -->
                     <a class="list-group-item text-danger" href="{% url 'logout' %}"> 
                         <i class="fa fa-sign-out-alt"></i> Logout 
                     </a>
                 </ul>
             </aside>
             
-            <!-- Main Content -->
             <main class="col-md-9">
                 <article class="card">
                     <header class="card-header">
@@ -46,65 +42,53 @@
                     </header>
                     <div class="card-body">
                         <div class="row">
-                            <!-- Card 1: Total Orders -->
                             <div class="col-md-6">
                                 <div class="card" style="text-align: center;">
                                     <div class="card-body">
                                         <h5 class="card-title text-muted">Total Orders</h5>
                                         <div class="mb-3">
-                                            <!-- Icon color changed to pink -->
                                             <i class="fa fa-shopping-bag fa-2x" style="color: #E94E8C;"></i>
                                         </div>
-                                        <h3 class="font-weight-bold">0</h3>
-                                        <!-- Button outline/text color changed to pink -->
-                                        <a href="#" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">View Orders</a>
+                                        <h3 class="font-weight-bold">{{ orders_count }}</h3>
+                                        <a href="{% url 'store:my_orders' %}" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">View Orders</a>
                                     </div>
                                 </div>
                             </div>
                             
-                            <!-- Card 2: My Cart -->
-                             <div class="col-md-6">
+                            <div class="col-md-6">
                                 <div class="card" style="text-align: center;">
                                     <div class="card-body">
                                         <h5 class="card-title text-muted">My Cart</h5>
                                         <div class="mb-3">
-                                            <!-- Icon color changed to pink -->
                                             <i class="fa fa-shopping-cart fa-2x" style="color: #E94E8C;"></i>
                                         </div>
                                         <h3 class="font-weight-bold">{{ cart_count|default:0 }} Items</h3>
-                                        <!-- Button outline/text color changed to pink -->
                                         <a href="{% url 'carts:cart' %}" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">View Cart</a>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Card 3: Edit Profile (My Profile) -->
                             <div class="col-md-6 mt-4">
                                 <div class="card" style="text-align: center;">
                                     <div class="card-body">
                                         <h5 class="card-title text-muted">Edit Profile</h5>
                                         <div class="mb-3">
-                                            <!-- Icon color changed to pink -->
                                             <i class="fa fa-user-circle fa-2x" style="color: #E94E8C;"></i>
                                         </div>
                                         <h3 class="font-weight-bold">{{ user.username }}</h3>
-                                        <!-- Button outline/text color changed to pink -->
-                                        <a href="#" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">Edit Profile</a>
+                                        <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">Edit Profile</a>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Card 4: Security (Change Password) -->
                             <div class="col-md-6 mt-4">
                                 <div class="card" style="text-align: center;">
                                     <div class="card-body">
                                         <h5 class="card-title text-muted">Security</h5>
                                         <div class="mb-3">
-                                            <!-- Icon color changed to pink -->
                                             <i class="fa fa-lock fa-2x" style="color: #E94E8C;"></i>
                                         </div>
                                         <h3 class="font-weight-bold">Change Password</h3>
-                                        <!-- Button outline/text color changed to pink -->
                                         <a href="#" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">Update Credentials</a>
                                     </div>
                                 </div>

@@ -12,9 +12,13 @@ class RegistrationForm(forms.ModelForm):
         'class': 'form-control',
     }))
 
+    security_question = forms.ChoiceField(choices=Account.SECURITY_QUESTIONS, widget=forms.Select(attrs={'class': 'form-control'}))
+    security_answer = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Your Answer', 'class': 'form-control'}))
+
+
     class Meta:
         model = Account
-        fields = ['first_name', 'last_name', 'username' ,'phone_number', 'email', 'password']
+        fields = ['first_name', 'last_name', 'phone_number', 'email', 'password', 'security_question', 'security_answer']
 
     def __init__(self, *args, **kwargs):
         super(RegistrationForm, self).__init__(*args, **kwargs)
@@ -52,3 +56,16 @@ class RegistrationForm(forms.ModelForm):
             raise forms.ValidationError("Password must contain at least one uppercase letter.")
             
         return cleaned_data
+    
+    class UserForm(forms.ModelForm):
+        first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+        last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+        phone_number = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+        
+        # Security Fields for editing in profile
+        security_question = forms.ChoiceField(choices=Account.SECURITY_QUESTIONS, widget=forms.Select(attrs={'class': 'form-control'}))
+        security_answer = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = Account
+        fields = ('first_name', 'last_name', 'phone_number', 'security_question', 'security_answer')

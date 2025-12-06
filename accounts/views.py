@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from .forms import RegistrationForm
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import RegistrationForm, UserForm # <--- Added UserForm
 from .models import Account
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from carts.models import Cart, CartItem
 from carts.views import _cart_id
 from orders.models import Order
-import requests # Needed for URL parsing 
+import requests 
 
 # --- REGISTER VIEW ---
 def register(request):
@@ -20,6 +20,10 @@ def register(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
             username = form.cleaned_data['username']
+            
+            # --- CRITICAL FIX: Capture Security Q/A ---
+            security_question = form.cleaned_data['security_question']
+            security_answer = form.cleaned_data['security_answer']
 
             # Create user
             user = Account.objects.create_user(
@@ -31,8 +35,11 @@ def register(request):
             )
             
             user.phone_number = phone_number
-            user.is_active = True 
+            # --- CRITICAL FIX: Save Security Fields ---
+            user.security_question = security_question
+            user.security_answer = security_answer
             
+            user.is_active = True 
             user.save()
 
             messages.success(request, 'Registration successful. You can now log in.')
@@ -45,7 +52,7 @@ def register(request):
     }
     return render(request, 'accounts/register.html', context)
 
-# --- LOGIN VIEW (With Cart Merge Logic) ---
+# --- LOGIN VIEW ---
 def login(request):
     if request.method == 'POST':
         email = request.POST['email']
@@ -56,9 +63,7 @@ def login(request):
         if user is not None:
             
             # STEP 1: GET THE GUEST CART *BEFORE* LOGIN
-            # Do this because auth_login() changes the Session ID
             try:
-                # Capture the cart object associated with the OLD session
                 cart = Cart.objects.get(cart_id=_cart_id(request))
                 is_cart_item_exists = CartItem.objects.filter(cart=cart).exists()
             except Cart.DoesNotExist:
@@ -66,7 +71,6 @@ def login(request):
                 is_cart_item_exists = False
 
             # STEP 2: LOG THE USER IN
-            # Rotates the session ID, but we already grabbed the 'cart' object above
             auth_login(request, user)
             
             # STEP 3: PERFORM THE MERGE
@@ -114,13 +118,89 @@ def login(request):
                     nextPage = params['next']
                     return redirect(nextPage)
             except:
-                return redirect('store:home')
+                pass # Fallback to standard redirect
+            
+            return redirect('store:store') # Or 'dashboard'
                 
         else:
             messages.error(request, 'Invalid login credentials')
             return redirect('login') 
 
     return render(request, 'accounts/login.html')
+
+# --- FORGOT PASSWORD STEP 1: VALIDATE EMAIL ---
+def reset_password_validate(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        try:
+            user = Account.objects.get(email=email)
+            # Store the user ID in session to use in the next step
+            request.session['reset_user_id'] = user.id
+            return redirect('security_question_step')
+        except Account.DoesNotExist:
+            messages.error(request, 'This email does not exist.')
+            return redirect('reset_password_validate')
+            
+    return render(request, 'accounts/reset_password_1_email.html')
+
+# --- FORGOT PASSWORD STEP 2: ASK QUESTION ---
+def security_question_step(request):
+    # Get the user from the session
+    user_id = request.session.get('reset_user_id')
+    if not user_id:
+        return redirect('reset_password_validate')
+    
+    user = Account.objects.get(id=user_id)
+    
+    if request.method == 'POST':
+        answer = request.POST['security_answer']
+        new_password = request.POST['new_password']
+        confirm_password = request.POST['confirm_password']
+        
+        # Check Answer (Case insensitive)
+        if answer.lower().strip() != user.security_answer.lower().strip():
+            messages.error(request, "Incorrect answer to security question.")
+            return redirect('security_question_step')
+            
+        # Check Password Match
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect('security_question_step')
+            
+        # SUCCESS: Update Password
+        user.set_password(new_password)
+        user.save()
+        messages.success(request, "Password reset successfully! Please login.")
+        del request.session['reset_user_id'] # Clean up session
+        return redirect('login')
+
+    # Get the readable version of the question
+    question_label = user.get_security_question_display()
+    
+    context = {
+        'question': question_label,
+    }
+    return render(request, 'accounts/reset_password_2_question.html', context)
+
+# --- EDIT PROFILE ---
+@login_required(login_url='login')
+def edit_profile(request):
+    user_account = get_object_or_404(Account, id=request.user.id)
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user_account)
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('edit_profile')
+    else:
+        # Load the form with existing data
+        user_form = UserForm(instance=user_account)
+
+    context = {
+        'user_form': user_form,
+    }
+    return render(request, 'accounts/edit_profile.html', context)
 
 # --- LOGOUT VIEW ---
 def logout(request):

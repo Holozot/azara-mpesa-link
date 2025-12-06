@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+    <div class="row">
+    
+        <aside class="col-md-3">
+            <ul class="list-group">
+                <a class="list-group-item" href="{% url 'dashboard' %}"> <i class="fa fa-tachometer-alt"></i> Dashboard </a>
+                <a class="list-group-item" href="{% url 'store:my_orders' %}"> <i class="fa fa-list"></i> My Orders </a>
+                <a class="list-group-item" href="{% url 'carts:cart' %}"> <i class="fa fa-shopping-cart"></i> My Cart </a>
+                
+                <a class="list-group-item active" style="background-color: #E94E8C; border-color: #E94E8C; color: white;" href="#"> 
+                    <i class="fa fa-user-edit"></i> Edit Profile 
+                </a>
+                
+                <a class="list-group-item text-danger" href="{% url 'logout' %}"> <i class="fa fa-sign-out-alt"></i> Logout </a>
+            </ul>
+        </aside>
+
+        <main class="col-md-9">
+            <article class="card">
+                <header class="card-header">
+                    <strong class="d-inline-block mr-3">Edit Your Profile</strong>
+                </header>
+                <div class="card-body">
+                    
+                    {% include 'includes/alerts.html' %}
+
+                    <form action="{% url 'edit_profile' %}" method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>First Name</label>
+                                {{ user_form.first_name }}
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Last Name</label>
+                                {{ user_form.last_name }}
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Phone Number</label>
+                                {{ user_form.phone_number }}
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Email Address</label>
+                                <input type="text" class="form-control" disabled value="{{ user.email }}">
+                                <small class="text-muted">Email cannot be changed.</small>
+                            </div>
+                        </div>
+
+                        <hr>
+                        <h5 class="mb-3">Security Settings</h5>
+                        <div class="alert alert-warning small">
+                            <i class="fa fa-info-circle"></i> This will update the security question used to reset your password.
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Security Question</label>
+                                {{ user_form.security_question }}
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Security Answer</label>
+                                {{ user_form.security_answer }}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+                    </form>
+                    
+                </div> </article> </main>
+    </div> </div>
+</section>
+
+{% endblock %}

@@ -56,6 +56,15 @@ class Account(AbstractBaseUser):
     USERNAME_FIELD  = 'email' 
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
+    SECURITY_QUESTIONS = [
+        ('pet', "What was the name of your first pet?"),
+        ('mother', "What is your mother's maiden name?"),
+        ('city', "In what city were you born?"),
+        ('school', "What was the name of your first school?"),
+    ]
+    security_question = models.CharField(max_length=50, choices=SECURITY_QUESTIONS, default='pet')
+    security_answer = models.CharField(max_length=100, default='')
+
     objects = MyAccountManager()
 
     def __str__(self):
