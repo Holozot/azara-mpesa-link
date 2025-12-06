@@ -60,7 +60,7 @@
                                         </td>
                                         <td>{{ item.product_price }}</td>
                                         <td>{{ item.quantity }}</td>
-                                        <td class="text-right">{{ item.subtotal }}</td> </tr>
+                                        <td class="text-right"> KES {{ item.subtotal }}</td> </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -74,8 +74,8 @@
                                         <td class="text-right">KES {{ order.order_total }}</td>
                                     </tr>
                                     <tr>
-                                        <td><strong>Tax:</strong></td>
-                                        <td class="text-right">KES 0.00</td>
+                                        <td><strong>Delivery Fee:</strong></td>
+                                        <td class="text-right">KES {{ order.delivery_fee }}</td>
                                     </tr>
                                     <tr class="border-top">
                                         <td><h5 class="font-weight-bold">Grand Total:</h5></td>

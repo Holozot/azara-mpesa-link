@@ -4,7 +4,6 @@
 {% block content %}
 <section class="section-content padding-y bg">
     <div class="container">
-        <!-- Success Message -->
         <div class="row">
             <main class="col-md-9 mx-auto">
                 <div class="card shadow-sm">
@@ -64,21 +63,18 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
-                        </div> <!-- table-responsive // -->
-                        
-                        <div class="text-right mt-4">
-                            <p class="mb-1">Total (Incl. all fees): <span class="float-right">KES{{ subtotal }}</span></p>
-                            <h4 class="font-weight-bold">Grand Total: <span class="float-right text-success">KES{{ order.order_total }}</span></h4>
+                        </div> <div class="text-right mt-4">
+                            <p class="mb-1">Subtotal: <span class="float-right">KES {{ order.order_total }}</span></p>
+                            
+                            <p class="mb-1">Delivery Fee: <span class="float-right">KES {{ order.delivery_fee }}</span></p>
+
+                            <h4 class="font-weight-bold">Grand Total: <span class="float-right text-success">KES {{ order.grand_total }}</span></h4>
                         </div>
                         
                         <hr>
                         <div class="text-center">
                             <a href="{% url 'store:store' %}" class="btn btn-primary mt-3">Continue Shopping</a>
                         </div>
-                    </div> <!-- card-body -->
-                </div> <!-- card -->
-            </main>
-        </div> <!-- row -->
-    </div> <!-- container -->
-</section>
+                    </div> </div> </main>
+        </div> </div> </section>
 {% endblock %}

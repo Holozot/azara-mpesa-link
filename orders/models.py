@@ -44,6 +44,7 @@ class Order(models.Model):
     order_note = models.CharField(max_length=100, blank=True) 
     
     delivery_method = models.CharField(max_length=20, choices=DELIVERY_METHOD, default='Delivery') 
+    delivery_fee = models.FloatField()
     
     # Financials (Tax removed, keeping simple totals)
     order_total = models.DecimalField(max_digits=10, decimal_places=2)
