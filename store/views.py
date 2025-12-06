@@ -202,7 +202,7 @@ def my_orders_view(request):
     context = {
         'orders': orders,
     }
-    return render(request, 'store/my_orders.html', context)
+    return render(request, 'orders/my_orders.html', context)
 
 def order_detail_view(request, order_id):
     """Renders the Order Review page where the Payment Form is embedded."""
