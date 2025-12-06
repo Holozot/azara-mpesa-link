@@ -33,7 +33,7 @@ def place_order(request, total=0, quantity=0):
             delivery_fee = 0
             # Check if user filled in Estate and City
             if form.cleaned_data.get('estate') and form.cleaned_data.get('city'):
-                delivery_fee = 100.00 
+                delivery_fee = 100 
             
             # Recalculate Grand Total (Subtotal + Delivery)
             grand_total = total + delivery_fee
