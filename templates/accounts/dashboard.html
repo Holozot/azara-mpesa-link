@@ -19,7 +19,7 @@
                         <i class="fa fa-shopping-bag" style="color: #E94E8C;"></i> My Orders 
                     </a>
                     
-                    <a class="list-group-item" style="color: #E94E8C;" href="{% url 'cart' %}"> 
+                    <a class="list-group-item" style="color: #E94E8C;" href="{% url 'carts:cart' %}"> 
                         <i class="fa fa-shopping-cart" style="color: #E94E8C;"></i> My Cart 
                     </a> 
                     
@@ -73,7 +73,7 @@
                                         </div>
                                         <h3 class="font-weight-bold">{{ cart_count|default:0 }} Items</h3>
                                         <!-- Button outline/text color changed to pink -->
-                                        <a href="{% url 'cart' %}" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">View Cart</a>
+                                        <a href="{% url 'carts:cart' %}" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">View Cart</a>
                                     </div>
                                 </div>
                             </div>

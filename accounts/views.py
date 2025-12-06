@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.contrib.auth.decorators import login_required 
 from carts.models import Cart, CartItem
 from carts.views import _cart_id
+from orders.models import Order
 import requests # Needed for URL parsing 
 
 # --- REGISTER VIEW ---
@@ -128,6 +129,12 @@ def logout(request):
     return redirect('login')
 
 # --- DASHBOARD VIEW ---
-@login_required(login_url='login') 
+@login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    user_orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    orders_count = user_orders.count()
+    
+    context = {
+        'orders_count': orders_count,
+    }
+    return render(request, 'accounts/dashboard.html', context)
