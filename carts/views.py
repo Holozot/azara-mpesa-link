@@ -186,7 +186,7 @@ def remove_cart(request, product_id, cart_item_id):
     except CartItem.DoesNotExist:
         pass 
         
-    return redirect('cart:cart')
+    return redirect('carts:cart')
 
 def remove_cart_item(request, product_id, cart_item_id):
     product = get_object_or_404(Product, id=product_id)
@@ -204,7 +204,7 @@ def remove_cart_item(request, product_id, cart_item_id):
     except CartItem.DoesNotExist:
         pass 
         
-    return redirect('cart:cart')
+    return redirect('carts:cart')
 
 
 def cart(request, total=0, quantity=0, cart_items=None):
