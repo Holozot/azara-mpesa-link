@@ -1,10 +1,15 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import RegistrationForm, UserForm # <--- Added UserForm
+from .forms import RegistrationForm, UserForm
 from .models import Account
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.contrib.auth.decorators import login_required 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password, check_password
+
+# --- IMPORTS FOR CHANGE PASSWORD ---
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+
 from carts.models import Cart, CartItem
 from carts.views import _cart_id
 from orders.models import Order
@@ -22,10 +27,11 @@ def register(request):
             password = form.cleaned_data['password']
             username = form.cleaned_data['username']
             
-            # --- CRITICAL FIX: Capture Security Q/A ---
+            # Capture Security Q/A
             security_question = form.cleaned_data['security_question']
             security_answer = form.cleaned_data['security_answer']
 
+            # Hash the answer for security
             encrypted_answer = make_password(security_answer.lower())
 
             # Create user
@@ -39,7 +45,7 @@ def register(request):
             
             user.phone_number = phone_number
             user.security_question = security_question
-            user.security_answer = encrypted_answer
+            user.security_answer = encrypted_answer # Save hashed answer
             
             user.is_active = True 
             user.save()
@@ -63,7 +69,6 @@ def login(request):
         user = authenticate(email=email, password=password)
 
         if user is not None:
-            
             # STEP 1: GET THE GUEST CART *BEFORE* LOGIN
             try:
                 cart = Cart.objects.get(cart_id=_cart_id(request))
@@ -78,25 +83,18 @@ def login(request):
             # STEP 3: PERFORM THE MERGE
             if is_cart_item_exists and cart:
                 guest_cart_items = CartItem.objects.filter(cart=cart)
-                
                 for item in guest_cart_items:
-                    # Check if user already has this product
                     existing_user_item = CartItem.objects.filter(product=item.product, user=user)
-                    
-                    # Sort guest variations for comparison
                     guest_variations = list(item.variations.all())
                     guest_variations.sort(key=lambda x: x.id)
                     
                     match_found = False
-                    
                     if existing_user_item.exists():
                         for usr_item in existing_user_item:
-                            # Sort user variations
                             user_variations = list(usr_item.variations.all())
                             user_variations.sort(key=lambda x: x.id)
                             
                             if guest_variations == user_variations:
-                                # MATCH FOUND: Add quantity and delete guest item
                                 usr_item.quantity += item.quantity
                                 usr_item.save()
                                 item.delete()
@@ -104,9 +102,8 @@ def login(request):
                                 break
                     
                     if not match_found:
-                        # NO MATCH: Move guest item to user
                         item.user = user
-                        item.cart = None # Detach from session cart
+                        item.cart = None 
                         item.save()
 
             messages.success(request, 'You are now logged in.')
@@ -120,88 +117,15 @@ def login(request):
                     nextPage = params['next']
                     return redirect(nextPage)
             except:
-                pass # Fallback to standard redirect
+                pass 
             
-            return redirect('store:store') # Or 'dashboard'
+            return redirect('dashboard') 
                 
         else:
             messages.error(request, 'Invalid login credentials')
             return redirect('login') 
 
     return render(request, 'accounts/login.html')
-
-# --- FORGOT PASSWORD STEP 1: VALIDATE EMAIL ---
-def reset_password_validate(request):
-    if request.method == 'POST':
-        email = request.POST['email']
-        try:
-            user = Account.objects.get(email=email)
-            # Store the user ID in session to use in the next step
-            request.session['reset_user_id'] = user.id
-            return redirect('security_question_step')
-        except Account.DoesNotExist:
-            messages.error(request, 'This email does not exist.')
-            return redirect('reset_password_validate')
-            
-    return render(request, 'accounts/reset_password_1.html')
-
-# --- FORGOT PASSWORD STEP 2: ASK QUESTION ---
-def security_question_step(request):
-    # Get the user from the session
-    user_id = request.session.get('reset_user_id')
-    if not user_id:
-        return redirect('reset_password_validate')
-    
-    user = Account.objects.get(id=user_id)
-    
-    if request.method == 'POST':
-        answer = request.POST['security_answer']
-        new_password = request.POST['new_password']
-        confirm_password = request.POST['confirm_password']
-        
-        if not check_password(answer.lower().strip(), user.security_answer):
-            messages.error(request, "Incorrect answer to security question.")
-            return redirect('security_question_step')
-            
-        # Check Password Match
-        if new_password != confirm_password:
-            messages.error(request, "Passwords do not match.")
-            return redirect('security_question_step')
-            
-        # SUCCESS: Update Password
-        user.set_password(new_password)
-        user.save()
-        messages.success(request, "Password reset successfully! Please login.")
-        del request.session['reset_user_id'] 
-        return redirect('login')
-
-    # Get the readable version of the question
-    question_label = user.get_security_question_display()
-    
-    context = {
-        'question': question_label,
-    }
-    return render(request, 'accounts/reset_password_2.html', context)
-
-# --- EDIT PROFILE ---
-@login_required(login_url='login')
-def edit_profile(request):
-    user_account = get_object_or_404(Account, id=request.user.id)
-    
-    if request.method == 'POST':
-        user_form = UserForm(request.POST, instance=user_account)
-        if user_form.is_valid():
-            user_form.save()
-            messages.success(request, 'Your profile has been updated.')
-            return redirect('edit_profile')
-    else:
-        # Load the form with existing data
-        user_form = UserForm(instance=user_account)
-
-    context = {
-        'user_form': user_form,
-    }
-    return render(request, 'accounts/edit_profile.html', context)
 
 # --- LOGOUT VIEW ---
 def logout(request):
@@ -219,3 +143,90 @@ def dashboard(request):
         'orders_count': orders_count,
     }
     return render(request, 'accounts/dashboard.html', context)
+
+# --- FORGOT PASSWORD STEP 1 ---
+def forgotPassword(request):
+    if request.method == 'POST':
+        email = request.POST['email']
+        try:
+            user = Account.objects.get(email=email)
+            request.session['reset_user_id'] = user.id
+            return redirect('security_question_step')
+        except Account.DoesNotExist:
+            messages.error(request, 'This email does not exist.')
+            return redirect('forgotPassword')
+            
+    return render(request, 'accounts/reset_password_1.html')
+
+# --- FORGOT PASSWORD STEP 2 ---
+def security_question_step(request):
+    user_id = request.session.get('reset_user_id')
+    if not user_id:
+        return redirect('forgotPassword')
+    
+    user = Account.objects.get(id=user_id)
+    
+    if request.method == 'POST':
+        answer = request.POST['security_answer']
+        new_password = request.POST['new_password']
+        confirm_password = request.POST['confirm_password']
+        
+        # Check Answer against Hash
+        if not check_password(answer.lower().strip(), user.security_answer):
+            messages.error(request, "Incorrect answer to security question.")
+            # Important: pass context so question doesn't disappear on error
+            context = {'question': user.get_security_question_display()} 
+            return render(request, 'accounts/reset_password_2.html', context)
+            
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            context = {'question': user.get_security_question_display()}
+            return render(request, 'accounts/reset_password_2.html', context)
+            
+        user.set_password(new_password)
+        user.save()
+        messages.success(request, "Password reset successfully! Please login.")
+        if 'reset_user_id' in request.session:
+            del request.session['reset_user_id'] 
+        return redirect('login')
+
+    context = {
+        'question': user.get_security_question_display(),
+    }
+    return render(request, 'accounts/reset_password_2.html', context)
+
+# --- EDIT PROFILE ---
+@login_required(login_url='login')
+def edit_profile(request):
+    user_account = get_object_or_404(Account, id=request.user.id)
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user_account)
+        if user_form.is_valid():
+            user_form.save()
+            messages.success(request, 'Your profile has been updated.')
+            return redirect('edit_profile')
+    else:
+        user_form = UserForm(instance=user_account)
+
+    context = {
+        'user_form': user_form,
+    }
+    return render(request, 'accounts/edit_profile.html', context)
+
+# --- CHANGE PASSWORD (ADDED) ---
+@login_required(login_url='login')
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Keep user logged in
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'accounts/change_password.html', {'form': form})

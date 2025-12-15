@@ -24,7 +24,7 @@
                         <i class="fa fa-user-edit" style="color: #E94E8C;"></i> Edit Profile 
                     </a>
 
-                    <a class="list-group-item" style="color: #E94E8C;" href="#"> 
+                    <a class="list-group-item" style="color: #E94E8C;" href="{% url 'change_password' %}"> 
                         <i class="fa fa-lock" style="color: #E94E8C;"></i> Change Password 
                     </a>
                     
@@ -89,7 +89,7 @@
                                             <i class="fa fa-lock fa-2x" style="color: #E94E8C;"></i>
                                         </div>
                                         <h3 class="font-weight-bold">Change Password</h3>
-                                        <a href="#" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">Update Credentials</a>
+                                        <a href="{% url 'change_password' %}" class="btn btn-outline-primary mt-2" style="border-color: #E94E8C; color: #E94E8C;">Update Credentials</a>
                                     </div>
                                 </div>
                             </div>
